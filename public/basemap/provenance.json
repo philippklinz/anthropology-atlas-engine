@@ -1,0 +1,8 @@
+{
+  "title": "Natural Earth 1:110m land",
+  "version": "5.1.2",
+  "source": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_110m_land.geojson",
+  "rights": "Public domain; https://www.naturalearthdata.com/about/terms-of-use/",
+  "processing": "Properties removed; coordinates unchanged. Modern physical orientation, not historical borders.",
+  "sha256": "4de9276d40f8706945a2050dbd82f8e78daa952a963b6b118fec359f35701867"
+}

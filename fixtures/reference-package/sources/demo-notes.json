@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "0.1.0",
+  "kind": "source",
+  "id": "source:demo-notes",
+  "editorial": {
+    "status": "draft"
+  },
+  "synthetic": true,
+  "sourceRefs": [],
+  "title": "Synthetic contract fixture — not a historical source",
+  "sourceType": "synthetic",
+  "creators": [
+    "Atlas contract fixture"
+  ],
+  "bibliographicNote": "All entities, relationships, dates and geometries in this fixture are invented for software-contract checks."
+}

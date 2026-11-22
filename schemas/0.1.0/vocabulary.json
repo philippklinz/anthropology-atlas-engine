@@ -1,0 +1,415 @@
+{
+  "schemaVersion": "0.1.0",
+  "entityDirectories": {
+    "place": "places",
+    "region": "regions",
+    "polity": "polities",
+    "community": "communities",
+    "organization": "organizations",
+    "person": "people",
+    "language": "languages",
+    "language-family": "language-families",
+    "script": "scripts",
+    "technology": "technologies",
+    "artifact": "artifacts",
+    "commodity": "commodities",
+    "religion": "religions",
+    "period": "periods",
+    "concept": "concepts"
+  },
+  "predicates": {
+    "located-at": {
+      "subjectTypes": [
+        "place",
+        "person",
+        "artifact",
+        "organization"
+      ],
+      "objectTypes": [
+        "place",
+        "region"
+      ],
+      "symmetric": false,
+      "labels": {
+        "de": "befindet sich in",
+        "en": "is located in"
+      }
+    },
+    "extent-of": {
+      "subjectTypes": [
+        "region"
+      ],
+      "objectTypes": [
+        "region"
+      ],
+      "symmetric": false,
+      "labels": {
+        "de": "hat Ausdehnung im Bezugsraum",
+        "en": "has extent in context"
+      }
+    },
+    "controls": {
+      "subjectTypes": [
+        "polity",
+        "organization"
+      ],
+      "objectTypes": [
+        "place",
+        "region"
+      ],
+      "symmetric": false,
+      "labels": {
+        "de": "kontrolliert",
+        "en": "controls"
+      }
+    },
+    "claims": {
+      "subjectTypes": [
+        "polity",
+        "organization"
+      ],
+      "objectTypes": [
+        "place",
+        "region"
+      ],
+      "symmetric": false,
+      "labels": {
+        "de": "beansprucht",
+        "en": "claims"
+      }
+    },
+    "influences": {
+      "subjectTypes": [
+        "place",
+        "region",
+        "polity",
+        "community",
+        "organization",
+        "person",
+        "language",
+        "language-family",
+        "script",
+        "technology",
+        "artifact",
+        "commodity",
+        "religion",
+        "period",
+        "concept"
+      ],
+      "objectTypes": [
+        "place",
+        "region",
+        "polity",
+        "community",
+        "organization",
+        "person",
+        "language",
+        "language-family",
+        "script",
+        "technology",
+        "artifact",
+        "commodity",
+        "religion",
+        "period",
+        "concept"
+      ],
+      "symmetric": false,
+      "labels": {
+        "de": "beeinflusst",
+        "en": "influences"
+      }
+    },
+    "part-of": {
+      "subjectTypes": [
+        "place",
+        "region",
+        "polity",
+        "community",
+        "organization",
+        "person",
+        "language",
+        "language-family",
+        "script",
+        "technology",
+        "artifact",
+        "commodity",
+        "religion",
+        "period",
+        "concept"
+      ],
+      "objectTypes": [
+        "place",
+        "region",
+        "polity",
+        "community",
+        "organization",
+        "person",
+        "language",
+        "language-family",
+        "script",
+        "technology",
+        "artifact",
+        "commodity",
+        "religion",
+        "period",
+        "concept"
+      ],
+      "symmetric": false,
+      "labels": {
+        "de": "ist Teil von",
+        "en": "is part of"
+      }
+    },
+    "member-of": {
+      "subjectTypes": [
+        "person",
+        "organization"
+      ],
+      "objectTypes": [
+        "organization"
+      ],
+      "symmetric": false,
+      "labels": {
+        "de": "ist Mitglied von",
+        "en": "is member of"
+      }
+    },
+    "holds-office-in": {
+      "subjectTypes": [
+        "person"
+      ],
+      "objectTypes": [
+        "polity",
+        "organization"
+      ],
+      "symmetric": false,
+      "labels": {
+        "de": "hat ein Amt in",
+        "en": "holds office in"
+      }
+    },
+    "trades-with": {
+      "subjectTypes": [
+        "place",
+        "polity",
+        "community",
+        "organization"
+      ],
+      "objectTypes": [
+        "place",
+        "polity",
+        "community",
+        "organization"
+      ],
+      "symmetric": true,
+      "labels": {
+        "de": "handelt mit",
+        "en": "trades with"
+      }
+    },
+    "allied-with": {
+      "subjectTypes": [
+        "polity",
+        "organization"
+      ],
+      "objectTypes": [
+        "polity",
+        "organization"
+      ],
+      "symmetric": true,
+      "labels": {
+        "de": "ist verbündet mit",
+        "en": "is allied with"
+      }
+    },
+    "uses-language": {
+      "subjectTypes": [
+        "community",
+        "organization",
+        "region",
+        "person"
+      ],
+      "objectTypes": [
+        "language"
+      ],
+      "symmetric": false,
+      "labels": {
+        "de": "verwendet Sprache",
+        "en": "uses language"
+      }
+    },
+    "written-in": {
+      "subjectTypes": [
+        "language"
+      ],
+      "objectTypes": [
+        "script"
+      ],
+      "symmetric": false,
+      "labels": {
+        "de": "wird geschrieben in",
+        "en": "is written in"
+      }
+    },
+    "language-descends-from": {
+      "subjectTypes": [
+        "language"
+      ],
+      "objectTypes": [
+        "language"
+      ],
+      "symmetric": false,
+      "labels": {
+        "de": "stammt sprachlich ab von",
+        "en": "linguistically descends from"
+      }
+    },
+    "member-of-language-family": {
+      "subjectTypes": [
+        "language",
+        "language-family"
+      ],
+      "objectTypes": [
+        "language-family"
+      ],
+      "symmetric": false,
+      "labels": {
+        "de": "gehört zur Sprachfamilie",
+        "en": "belongs to language family"
+      }
+    },
+    "script-derived-from": {
+      "subjectTypes": [
+        "script"
+      ],
+      "objectTypes": [
+        "script"
+      ],
+      "symmetric": false,
+      "labels": {
+        "de": "ist als Schrift entwickelt aus",
+        "en": "is a script derived from"
+      }
+    },
+    "uses-technology": {
+      "subjectTypes": [
+        "community",
+        "organization",
+        "polity",
+        "person"
+      ],
+      "objectTypes": [
+        "technology"
+      ],
+      "symmetric": false,
+      "labels": {
+        "de": "verwendet Technik",
+        "en": "uses technology"
+      }
+    },
+    "attested-at": {
+      "subjectTypes": [
+        "language",
+        "script",
+        "technology",
+        "artifact",
+        "community"
+      ],
+      "objectTypes": [
+        "place",
+        "region"
+      ],
+      "symmetric": false,
+      "labels": {
+        "de": "ist bezeugt in",
+        "en": "is attested at"
+      }
+    },
+    "period-applies-to": {
+      "subjectTypes": [
+        "period"
+      ],
+      "objectTypes": [
+        "region",
+        "community",
+        "polity"
+      ],
+      "symmetric": false,
+      "labels": {
+        "de": "gilt als Epoche für",
+        "en": "is a period applied to"
+      }
+    }
+  },
+  "eventRoles": {
+    "battle": [
+      "attacker",
+      "defender",
+      "combatant",
+      "commander",
+      "observer"
+    ],
+    "war": [
+      "belligerent",
+      "ally",
+      "commander",
+      "mediator"
+    ],
+    "campaign": [
+      "force",
+      "commander",
+      "opponent"
+    ],
+    "migration": [
+      "moving-community",
+      "participant"
+    ],
+    "journey": [
+      "traveller",
+      "companion"
+    ],
+    "invention": [
+      "proposed-inventor",
+      "associated-community",
+      "technology"
+    ],
+    "adoption": [
+      "adopter",
+      "technology",
+      "transmitter"
+    ],
+    "foundation": [
+      "founder",
+      "founded-entity"
+    ],
+    "dissolution": [
+      "dissolved-entity",
+      "participant"
+    ],
+    "birth": [
+      "newborn",
+      "parent"
+    ],
+    "death": [
+      "deceased"
+    ],
+    "treaty": [
+      "signatory",
+      "mediator"
+    ],
+    "attestation": [
+      "attested-entity",
+      "author"
+    ],
+    "other": [
+      "participant"
+    ]
+  },
+  "capabilities": [
+    "geo-basic",
+    "historical-time",
+    "network-basic",
+    "model-viewer",
+    "script-samples"
+  ]
+}

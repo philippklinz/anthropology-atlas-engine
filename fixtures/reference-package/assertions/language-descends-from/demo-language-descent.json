@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "0.1.0",
+  "kind": "assertion",
+  "id": "assertion:demo-language-descent",
+  "editorial": {
+    "status": "draft"
+  },
+  "synthetic": true,
+  "sourceRefs": [
+    {
+      "sourceId": "source:demo-notes",
+      "role": "supports",
+      "locator": "Fiktiver Vertragsfall, keine historische Aussage"
+    }
+  ],
+  "subjectId": "language:demo-language",
+  "predicate": "language-descends-from",
+  "objectId": "language:demo-parent-language",
+  "time": {
+    "kind": "unknown"
+  },
+  "epistemic": {
+    "status": "attested"
+  }
+}

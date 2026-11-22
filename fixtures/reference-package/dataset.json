@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "0.1.0",
+  "defaultLanguage": "de",
+  "defaultRecordLicense": "GPL-2.0",
+  "packageIds": [
+    "package:demo-core",
+    "package:demo-reuse"
+  ]
+}

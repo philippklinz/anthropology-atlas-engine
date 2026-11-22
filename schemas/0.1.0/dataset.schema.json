@@ -1,0 +1,35 @@
+{
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "const": "0.1.0"
+    },
+    "defaultLanguage": {
+      "type": "string",
+      "minLength": 1
+    },
+    "defaultRecordLicense": {
+      "type": "string",
+      "minLength": 1
+    },
+    "packageIds": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^package:[a-z0-9]+(?:-[a-z0-9]+)*$"
+      },
+      "minItems": 0,
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "defaultLanguage",
+    "defaultRecordLicense",
+    "packageIds"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:anthropology-atlas:dataset:0.1.0"
+}

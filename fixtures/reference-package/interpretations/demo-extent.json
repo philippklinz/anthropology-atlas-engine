@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "0.1.0",
+  "kind": "interpretation",
+  "id": "interpretation:demo-extent",
+  "editorial": {
+    "status": "draft"
+  },
+  "synthetic": true,
+  "sourceRefs": [
+    {
+      "sourceId": "source:demo-notes",
+      "role": "supports",
+      "locator": "Fiktiver Vertragsfall, keine historische Aussage"
+    }
+  ],
+  "question": {
+    "de": "Welche fiktive Fläche?",
+    "en": "Which fictional extent?"
+  },
+  "memberIds": [
+    "assertion:demo-control-a",
+    "assertion:demo-control-alternative"
+  ],
+  "explanation": {
+    "de": "Zwei erfundene Varianten zum Prüfen der Oberfläche.",
+    "en": "Two invented variants to check the interface."
+  }
+}

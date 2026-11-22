@@ -1,0 +1,32 @@
+{
+  "type": "Feature",
+  "id": "geometry:demo-area-b",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [
+          3,
+          49
+        ],
+        [
+          6,
+          49
+        ],
+        [
+          6,
+          52
+        ],
+        [
+          3,
+          52
+        ],
+        [
+          3,
+          49
+        ]
+      ]
+    ]
+  },
+  "properties": {}
+}

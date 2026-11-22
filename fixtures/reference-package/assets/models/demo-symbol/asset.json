@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "0.1.0",
+  "kind": "asset",
+  "id": "asset:demo-symbol",
+  "editorial": {
+    "status": "draft"
+  },
+  "synthetic": true,
+  "sourceRefs": [
+    {
+      "sourceId": "source:demo-notes",
+      "role": "supports",
+      "locator": "Fiktiver Vertragsfall, keine historische Aussage"
+    }
+  ],
+  "assetType": "model",
+  "file": "model.glb",
+  "mediaType": "model/gltf-binary",
+  "labels": {
+    "de": "Geometrisches Testsymbol",
+    "en": "Geometric test symbol"
+  },
+  "alt": {
+    "de": "Ein fiktiver Tetraeder, kein historisches Exponat.",
+    "en": "A fictional tetrahedron, not a historical exhibit."
+  },
+  "entityIds": [
+    "artifact:demo-object"
+  ],
+  "rights": {
+    "license": "GPL-2.0",
+    "creators": [
+      "Atlas contract fixture"
+    ],
+    "attribution": "Synthetic test data; no historical reconstruction.",
+    "originNote": "Created for this contract fixture."
+  },
+  "model": {
+    "representation": "symbol",
+    "dimensionsMeters": {
+      "width": 1,
+      "height": 1,
+      "depth": 1
+    }
+  }
+}

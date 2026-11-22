@@ -1,0 +1,23 @@
+:root {
+  --color-ink: #202325;
+  --color-graphite: #303639;
+  --surface-page: #F3F2EF;
+  --surface-panel: #FFFFFF;
+  --surface-navigation: #202627;
+  --text-primary: #202325;
+  --text-navigation: #E8EEEB;
+  --color-divider: #D4D4CF;
+  --color-selection: #009E98;
+  --color-accent-text: #006F6B;
+  --font-interface: "Liberation Sans", sans-serif;
+  --font-reading: "Liberation Serif", serif;
+  --font-metadata: "Liberation Mono", monospace;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --radius-control: 4px;
+}

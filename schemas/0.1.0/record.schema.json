@@ -1,0 +1,2159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:anthropology-atlas:record:0.1.0",
+  "title": "Anthropology Atlas authoring records — draft 0.1.0",
+  "description": "Structural contract only; semantic rules and release validation are additionally required.",
+  "$defs": {
+    "date": {
+      "type": "object",
+      "properties": {
+        "year": {
+          "type": "integer",
+          "minimum": -10000,
+          "maximum": 2100
+        },
+        "month": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 12
+        },
+        "day": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 31
+        }
+      },
+      "required": [
+        "year",
+        "month",
+        "day"
+      ],
+      "additionalProperties": false
+    },
+    "timeEstimate": {
+      "type": "object",
+      "properties": {
+        "earliest": {
+          "$ref": "#/$defs/date"
+        },
+        "latest": {
+          "$ref": "#/$defs/date"
+        },
+        "precision": {
+          "enum": [
+            "day",
+            "month",
+            "year"
+          ]
+        },
+        "qualifier": {
+          "enum": [
+            "exact",
+            "approximate",
+            "uncertain"
+          ]
+        },
+        "original": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string",
+              "minLength": 1
+            },
+            "calendar": {
+              "type": "string",
+              "minLength": 1
+            },
+            "conversionNote": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "text",
+            "calendar"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "earliest",
+        "latest",
+        "precision",
+        "qualifier"
+      ],
+      "additionalProperties": false
+    },
+    "time": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "unknown"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "instant"
+            },
+            "at": {
+              "$ref": "#/$defs/timeEstimate"
+            }
+          },
+          "required": [
+            "kind",
+            "at"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "interval"
+            },
+            "start": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/timeEstimate"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "end": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/timeEstimate"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "endMeaning": {
+              "enum": [
+                "ended",
+                "last-attested"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "start",
+            "end",
+            "endMeaning"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "citation": {
+      "type": "object",
+      "properties": {
+        "sourceId": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^source:[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "role": {
+          "enum": [
+            "background",
+            "supports",
+            "challenges",
+            "derivation"
+          ]
+        },
+        "locator": {
+          "type": "string",
+          "minLength": 1
+        },
+        "note": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)*$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "appliesTo": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^(?:/(?:[^~/]|~[01])*)*$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "sourceId",
+        "role"
+      ],
+      "additionalProperties": false
+    },
+    "editorial": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "enum": [
+            "draft",
+            "reviewed",
+            "withdrawn"
+          ]
+        },
+        "reviewedBy": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reviewedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "note": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)*$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "reviewed"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "reviewedBy",
+              "reviewedAt"
+            ]
+          }
+        }
+      ]
+    },
+    "rights": {
+      "type": "object",
+      "properties": {
+        "license": {
+          "type": "string",
+          "minLength": 1
+        },
+        "creators": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "attribution": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceUrl": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https?://"
+        },
+        "originNote": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "license",
+        "creators",
+        "attribution"
+      ],
+      "additionalProperties": false,
+      "anyOf": [
+        {
+          "required": [
+            "sourceUrl"
+          ]
+        },
+        {
+          "required": [
+            "originNote"
+          ]
+        }
+      ]
+    },
+    "spatial": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "geometryId": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^geometry:[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "role": {
+            "enum": [
+              "location",
+              "extent",
+              "route",
+              "connection",
+              "findspot",
+              "uncertainty-area"
+            ]
+          }
+        },
+        "required": [
+          "geometryId",
+          "role"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "epistemic": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "enum": [
+            "attested",
+            "inferred",
+            "hypothetical",
+            "disputed"
+          ]
+        },
+        "note": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)*$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "inferred",
+                  "hypothetical",
+                  "disputed"
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "note"
+            ]
+          }
+        }
+      ]
+    },
+    "camera": {
+      "type": "object",
+      "properties": {
+        "longitude": {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        },
+        "latitude": {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90
+        },
+        "metersPerPixel": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "bearing": {
+          "type": "number"
+        },
+        "pitch": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 85
+        }
+      },
+      "required": [
+        "longitude",
+        "latitude",
+        "metersPerPixel"
+      ],
+      "additionalProperties": false
+    },
+    "initialState": {
+      "type": "object",
+      "properties": {
+        "camera": {
+          "$ref": "#/$defs/camera"
+        },
+        "time": {
+          "$ref": "#/$defs/time"
+        },
+        "layers": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "selectedIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[a-z]+(?:-[a-z]+)*:[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "view": {
+          "enum": [
+            "map",
+            "network"
+          ]
+        }
+      },
+      "required": [
+        "camera",
+        "time",
+        "layers"
+      ],
+      "additionalProperties": false
+    },
+    "placement": {
+      "type": "object",
+      "properties": {
+        "assetId": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^asset:[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "anchorGeometryId": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^geometry:[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "scaleMode": {
+          "enum": [
+            "physical",
+            "symbolic"
+          ]
+        },
+        "headingDegrees": {
+          "type": "number",
+          "minimum": 0,
+          "exclusiveMaximum": 360
+        },
+        "altitudeMeters": {
+          "type": "number"
+        },
+        "symbolScale": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "required": [
+        "assetId",
+        "anchorGeometryId",
+        "scaleMode",
+        "headingDegrees",
+        "altitudeMeters"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "scaleMode": {
+                "const": "symbolic"
+              }
+            },
+            "required": [
+              "scaleMode"
+            ]
+          },
+          "then": {
+            "required": [
+              "symbolScale"
+            ]
+          }
+        }
+      ]
+    },
+    "entity": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "0.1.0"
+        },
+        "kind": {
+          "const": "entity"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-z]+(?:-[a-z]+)*:[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "editorial": {
+          "$ref": "#/$defs/editorial"
+        },
+        "sourceRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/citation"
+          },
+          "minItems": 0
+        },
+        "synthetic": {
+          "type": "boolean"
+        },
+        "recordLicense": {
+          "type": "string",
+          "minLength": 1
+        },
+        "entityType": {
+          "enum": [
+            "place",
+            "region",
+            "polity",
+            "community",
+            "organization",
+            "person",
+            "language",
+            "language-family",
+            "script",
+            "technology",
+            "artifact",
+            "commodity",
+            "religion",
+            "period",
+            "concept"
+          ]
+        },
+        "labels": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)*$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "summary": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)*$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "names": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string",
+                "minLength": 1
+              },
+              "languageTag": {
+                "type": "string",
+                "minLength": 1
+              },
+              "nameType": {
+                "enum": [
+                  "preferred",
+                  "historical",
+                  "alternative",
+                  "transliteration"
+                ]
+              },
+              "time": {
+                "$ref": "#/$defs/time"
+              },
+              "transliterationSystem": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sourceRefs": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/citation"
+                },
+                "minItems": 0
+              }
+            },
+            "required": [
+              "text",
+              "languageTag",
+              "nameType",
+              "sourceRefs"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0
+        },
+        "externalIds": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "samples": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string",
+                "minLength": 1
+              },
+              "languageTag": {
+                "type": "string",
+                "minLength": 1
+              },
+              "scriptId": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^script:[a-z0-9]+(?:-[a-z0-9]+)*$"
+              },
+              "transliteration": {
+                "type": "string",
+                "minLength": 1
+              },
+              "transliterationSystem": {
+                "type": "string",
+                "minLength": 1
+              },
+              "translation": {
+                "type": "object",
+                "minProperties": 1,
+                "propertyNames": {
+                  "pattern": "^[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)*$"
+                },
+                "additionalProperties": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "direction": {
+                "enum": [
+                  "ltr",
+                  "rtl",
+                  "auto"
+                ]
+              },
+              "fontAssetId": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^asset:[a-z0-9]+(?:-[a-z0-9]+)*$"
+              },
+              "unicodeVersion": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sourceRefs": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/citation"
+                },
+                "minItems": 0
+              }
+            },
+            "required": [
+              "text",
+              "languageTag",
+              "sourceRefs"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0
+        },
+        "assetIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^asset:[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "id",
+        "editorial",
+        "sourceRefs",
+        "entityType",
+        "labels"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "entityType": {
+                "const": "place"
+              }
+            },
+            "required": [
+              "entityType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^place:[a-z0-9]+(?:-[a-z0-9]+)*$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "entityType": {
+                "const": "region"
+              }
+            },
+            "required": [
+              "entityType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^region:[a-z0-9]+(?:-[a-z0-9]+)*$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "entityType": {
+                "const": "polity"
+              }
+            },
+            "required": [
+              "entityType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^polity:[a-z0-9]+(?:-[a-z0-9]+)*$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "entityType": {
+                "const": "community"
+              }
+            },
+            "required": [
+              "entityType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^community:[a-z0-9]+(?:-[a-z0-9]+)*$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "entityType": {
+                "const": "organization"
+              }
+            },
+            "required": [
+              "entityType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^organization:[a-z0-9]+(?:-[a-z0-9]+)*$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "entityType": {
+                "const": "person"
+              }
+            },
+            "required": [
+              "entityType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^person:[a-z0-9]+(?:-[a-z0-9]+)*$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "entityType": {
+                "const": "language"
+              }
+            },
+            "required": [
+              "entityType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^language:[a-z0-9]+(?:-[a-z0-9]+)*$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "entityType": {
+                "const": "language-family"
+              }
+            },
+            "required": [
+              "entityType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^language-family:[a-z0-9]+(?:-[a-z0-9]+)*$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "entityType": {
+                "const": "script"
+              }
+            },
+            "required": [
+              "entityType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^script:[a-z0-9]+(?:-[a-z0-9]+)*$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "entityType": {
+                "const": "technology"
+              }
+            },
+            "required": [
+              "entityType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^technology:[a-z0-9]+(?:-[a-z0-9]+)*$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "entityType": {
+                "const": "artifact"
+              }
+            },
+            "required": [
+              "entityType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^artifact:[a-z0-9]+(?:-[a-z0-9]+)*$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "entityType": {
+                "const": "commodity"
+              }
+            },
+            "required": [
+              "entityType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^commodity:[a-z0-9]+(?:-[a-z0-9]+)*$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "entityType": {
+                "const": "religion"
+              }
+            },
+            "required": [
+              "entityType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^religion:[a-z0-9]+(?:-[a-z0-9]+)*$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "entityType": {
+                "const": "period"
+              }
+            },
+            "required": [
+              "entityType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^period:[a-z0-9]+(?:-[a-z0-9]+)*$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "entityType": {
+                "const": "concept"
+              }
+            },
+            "required": [
+              "entityType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^concept:[a-z0-9]+(?:-[a-z0-9]+)*$"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "assertion": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "0.1.0"
+        },
+        "kind": {
+          "const": "assertion"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^assertion:[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "editorial": {
+          "$ref": "#/$defs/editorial"
+        },
+        "sourceRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/citation"
+          },
+          "minItems": 0
+        },
+        "synthetic": {
+          "type": "boolean"
+        },
+        "recordLicense": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subjectId": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?:place|region|polity|community|organization|person|language|language-family|script|technology|artifact|commodity|religion|period|concept):[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "predicate": {
+          "enum": [
+            "located-at",
+            "extent-of",
+            "controls",
+            "claims",
+            "influences",
+            "part-of",
+            "member-of",
+            "holds-office-in",
+            "trades-with",
+            "allied-with",
+            "uses-language",
+            "written-in",
+            "language-descends-from",
+            "member-of-language-family",
+            "script-derived-from",
+            "uses-technology",
+            "attested-at",
+            "period-applies-to"
+          ]
+        },
+        "objectId": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?:place|region|polity|community|organization|person|language|language-family|script|technology|artifact|commodity|religion|period|concept):[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "time": {
+          "$ref": "#/$defs/time"
+        },
+        "epistemic": {
+          "$ref": "#/$defs/epistemic"
+        },
+        "spatial": {
+          "$ref": "#/$defs/spatial"
+        },
+        "scopeIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^(?:place|region|polity|community|organization|person|language|language-family|script|technology|artifact|commodity|religion|period|concept):[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "note": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)*$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "id",
+        "editorial",
+        "sourceRefs",
+        "subjectId",
+        "predicate",
+        "objectId",
+        "time",
+        "epistemic"
+      ],
+      "additionalProperties": false
+    },
+    "event": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "0.1.0"
+        },
+        "kind": {
+          "const": "event"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^event:[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "editorial": {
+          "$ref": "#/$defs/editorial"
+        },
+        "sourceRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/citation"
+          },
+          "minItems": 0
+        },
+        "synthetic": {
+          "type": "boolean"
+        },
+        "recordLicense": {
+          "type": "string",
+          "minLength": 1
+        },
+        "eventType": {
+          "enum": [
+            "battle",
+            "war",
+            "campaign",
+            "migration",
+            "journey",
+            "invention",
+            "adoption",
+            "foundation",
+            "dissolution",
+            "birth",
+            "death",
+            "treaty",
+            "attestation",
+            "other"
+          ]
+        },
+        "labels": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)*$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "time": {
+          "$ref": "#/$defs/time"
+        },
+        "participants": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "entityId": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^(?:place|region|polity|community|organization|person|language|language-family|script|technology|artifact|commodity|religion|period|concept):[a-z0-9]+(?:-[a-z0-9]+)*$"
+              },
+              "role": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sourceRefs": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/citation"
+                },
+                "minItems": 0
+              }
+            },
+            "required": [
+              "entityId",
+              "role"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        },
+        "placeIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^place:[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "spatial": {
+          "$ref": "#/$defs/spatial"
+        },
+        "waypoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "placeId": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^place:[a-z0-9]+(?:-[a-z0-9]+)*$"
+              },
+              "geometryId": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^geometry:[a-z0-9]+(?:-[a-z0-9]+)*$"
+              },
+              "time": {
+                "$ref": "#/$defs/time"
+              },
+              "sourceRefs": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/citation"
+                },
+                "minItems": 0
+              }
+            },
+            "required": [
+              "time",
+              "sourceRefs"
+            ],
+            "additionalProperties": false,
+            "oneOf": [
+              {
+                "required": [
+                  "placeId"
+                ],
+                "not": {
+                  "required": [
+                    "geometryId"
+                  ]
+                }
+              },
+              {
+                "required": [
+                  "geometryId"
+                ],
+                "not": {
+                  "required": [
+                    "placeId"
+                  ]
+                }
+              }
+            ]
+          },
+          "minItems": 1
+        },
+        "parentEventId": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^event:[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "epistemic": {
+          "$ref": "#/$defs/epistemic"
+        },
+        "note": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)*$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "id",
+        "editorial",
+        "sourceRefs",
+        "eventType",
+        "labels",
+        "time",
+        "participants",
+        "epistemic"
+      ],
+      "additionalProperties": false
+    },
+    "geometry": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "0.1.0"
+        },
+        "kind": {
+          "const": "geometry"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^geometry:[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "editorial": {
+          "$ref": "#/$defs/editorial"
+        },
+        "sourceRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/citation"
+          },
+          "minItems": 0
+        },
+        "synthetic": {
+          "type": "boolean"
+        },
+        "recordLicense": {
+          "type": "string",
+          "minLength": 1
+        },
+        "file": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+$"
+        },
+        "geometryType": {
+          "enum": [
+            "Point",
+            "MultiPoint",
+            "LineString",
+            "MultiLineString",
+            "Polygon",
+            "MultiPolygon"
+          ]
+        },
+        "method": {
+          "enum": [
+            "measured",
+            "digitized",
+            "reconstructed",
+            "schematic"
+          ]
+        },
+        "accuracy": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "unknown"
+                },
+                "note": {
+                  "type": "object",
+                  "minProperties": 1,
+                  "propertyNames": {
+                    "pattern": "^[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)*$"
+                  },
+                  "additionalProperties": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              },
+              "required": [
+                "kind"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "estimated"
+                },
+                "meters": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "note": {
+                  "type": "object",
+                  "minProperties": 1,
+                  "propertyNames": {
+                    "pattern": "^[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)*$"
+                  },
+                  "additionalProperties": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              },
+              "required": [
+                "kind",
+                "meters",
+                "note"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "processingNote": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)*$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "rights": {
+          "$ref": "#/$defs/rights"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "id",
+        "editorial",
+        "sourceRefs",
+        "file",
+        "geometryType",
+        "method",
+        "accuracy",
+        "rights"
+      ],
+      "additionalProperties": false
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "0.1.0"
+        },
+        "kind": {
+          "const": "source"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^source:[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "editorial": {
+          "$ref": "#/$defs/editorial"
+        },
+        "sourceRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/citation"
+          },
+          "minItems": 0
+        },
+        "synthetic": {
+          "type": "boolean"
+        },
+        "recordLicense": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceType": {
+          "enum": [
+            "book",
+            "article",
+            "catalog",
+            "archive",
+            "dataset",
+            "website",
+            "object",
+            "synthetic"
+          ]
+        },
+        "creators": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        },
+        "published": {
+          "type": "string",
+          "minLength": 1
+        },
+        "publisher": {
+          "type": "string",
+          "minLength": 1
+        },
+        "containerTitle": {
+          "type": "string",
+          "minLength": 1
+        },
+        "identifiers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https?://"
+        },
+        "accessedAt": {
+          "type": "string",
+          "format": "date"
+        },
+        "language": {
+          "type": "string",
+          "minLength": 1
+        },
+        "bibliographicNote": {
+          "type": "string",
+          "minLength": 1
+        },
+        "assetId": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^asset:[a-z0-9]+(?:-[a-z0-9]+)*$"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "id",
+        "editorial",
+        "sourceRefs",
+        "title",
+        "sourceType"
+      ],
+      "additionalProperties": false
+    },
+    "interpretation": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "0.1.0"
+        },
+        "kind": {
+          "const": "interpretation"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^interpretation:[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "editorial": {
+          "$ref": "#/$defs/editorial"
+        },
+        "sourceRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/citation"
+          },
+          "minItems": 0
+        },
+        "synthetic": {
+          "type": "boolean"
+        },
+        "recordLicense": {
+          "type": "string",
+          "minLength": 1
+        },
+        "question": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)*$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "memberIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^assertion:[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "minItems": 2,
+          "uniqueItems": true
+        },
+        "explanation": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)*$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "id",
+        "editorial",
+        "sourceRefs",
+        "question",
+        "memberIds",
+        "explanation"
+      ],
+      "additionalProperties": false
+    },
+    "asset": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "0.1.0"
+        },
+        "kind": {
+          "const": "asset"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^asset:[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "editorial": {
+          "$ref": "#/$defs/editorial"
+        },
+        "sourceRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/citation"
+          },
+          "minItems": 0
+        },
+        "synthetic": {
+          "type": "boolean"
+        },
+        "recordLicense": {
+          "type": "string",
+          "minLength": 1
+        },
+        "assetType": {
+          "enum": [
+            "model",
+            "image",
+            "font",
+            "document"
+          ]
+        },
+        "file": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+$"
+        },
+        "mediaType": {
+          "type": "string",
+          "minLength": 1
+        },
+        "labels": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)*$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "alt": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)*$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "entityIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^(?:place|region|polity|community|organization|person|language|language-family|script|technology|artifact|commodity|religion|period|concept):[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "rights": {
+          "$ref": "#/$defs/rights"
+        },
+        "model": {
+          "type": "object",
+          "properties": {
+            "representation": {
+              "enum": [
+                "scan",
+                "reconstruction",
+                "symbol"
+              ]
+            },
+            "dimensionsMeters": {
+              "type": "object",
+              "properties": {
+                "width": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "height": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "depth": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                }
+              },
+              "required": [
+                "width",
+                "height",
+                "depth"
+              ],
+              "additionalProperties": false
+            },
+            "previewFile": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+$"
+            }
+          },
+          "required": [
+            "representation"
+          ],
+          "additionalProperties": false
+        },
+        "depictsTime": {
+          "$ref": "#/$defs/time"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "id",
+        "editorial",
+        "sourceRefs",
+        "assetType",
+        "file",
+        "mediaType",
+        "labels",
+        "alt",
+        "rights"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "assetType": {
+                "const": "model"
+              }
+            },
+            "required": [
+              "assetType"
+            ]
+          },
+          "then": {
+            "required": [
+              "model"
+            ],
+            "properties": {
+              "mediaType": {
+                "const": "model/gltf-binary"
+              },
+              "file": {
+                "pattern": "\\.glb$"
+              }
+            }
+          },
+          "else": {
+            "not": {
+              "required": [
+                "model"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "chapter": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "0.1.0"
+        },
+        "kind": {
+          "const": "chapter"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^chapter:[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "editorial": {
+          "$ref": "#/$defs/editorial"
+        },
+        "sourceRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/citation"
+          },
+          "minItems": 0
+        },
+        "synthetic": {
+          "type": "boolean"
+        },
+        "recordLicense": {
+          "type": "string",
+          "minLength": 1
+        },
+        "labels": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)*$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "textFiles": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+$"
+          }
+        },
+        "focusIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[a-z]+(?:-[a-z]+)*:[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "initialState": {
+          "$ref": "#/$defs/initialState"
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+              },
+              "textAnchor": {
+                "type": "string",
+                "minLength": 1
+              },
+              "state": {
+                "$ref": "#/$defs/initialState"
+              }
+            },
+            "required": [
+              "id",
+              "textAnchor"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        },
+        "interpretationChoices": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "interpretationId": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^interpretation:[a-z0-9]+(?:-[a-z0-9]+)*$"
+              },
+              "assertionId": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^assertion:[a-z0-9]+(?:-[a-z0-9]+)*$"
+              },
+              "reason": {
+                "type": "object",
+                "minProperties": 1,
+                "propertyNames": {
+                  "pattern": "^[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)*$"
+                },
+                "additionalProperties": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "required": [
+              "interpretationId",
+              "assertionId",
+              "reason"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        },
+        "modelPlacements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/placement"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "id",
+        "editorial",
+        "sourceRefs",
+        "labels",
+        "textFiles",
+        "focusIds",
+        "initialState"
+      ],
+      "additionalProperties": false
+    },
+    "package": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "0.1.0"
+        },
+        "kind": {
+          "const": "package"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^package:[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "editorial": {
+          "$ref": "#/$defs/editorial"
+        },
+        "sourceRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/citation"
+          },
+          "minItems": 0
+        },
+        "synthetic": {
+          "type": "boolean"
+        },
+        "recordLicense": {
+          "type": "string",
+          "minLength": 1
+        },
+        "labels": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)*$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "defaultLanguage": {
+          "type": "string",
+          "minLength": 1
+        },
+        "languages": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^package:[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "recordIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[a-z]+(?:-[a-z]+)*:[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "entryChapterIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^chapter:[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "requiredCapabilities": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "geo-basic",
+              "historical-time",
+              "network-basic",
+              "model-viewer",
+              "script-samples"
+            ]
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "id",
+        "editorial",
+        "sourceRefs",
+        "labels",
+        "defaultLanguage",
+        "languages",
+        "dependencies",
+        "recordIds",
+        "entryChapterIds",
+        "requiredCapabilities"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/entity"
+    },
+    {
+      "$ref": "#/$defs/assertion"
+    },
+    {
+      "$ref": "#/$defs/event"
+    },
+    {
+      "$ref": "#/$defs/geometry"
+    },
+    {
+      "$ref": "#/$defs/source"
+    },
+    {
+      "$ref": "#/$defs/interpretation"
+    },
+    {
+      "$ref": "#/$defs/asset"
+    },
+    {
+      "$ref": "#/$defs/chapter"
+    },
+    {
+      "$ref": "#/$defs/package"
+    }
+  ]
+}

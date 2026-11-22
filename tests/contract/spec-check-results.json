@@ -1,0 +1,147 @@
+{
+  "schemas_checked": 4,
+  "records_schema_valid": 39,
+  "package_count": 2,
+  "payloads_present": true,
+  "references_resolved": true,
+  "negative_cases": [
+    {
+      "case": "Unbekanntes Feld",
+      "result": "rejected",
+      "exception": "ValidationError"
+    },
+    {
+      "case": "Falscher Entitäts-Namespace",
+      "result": "rejected",
+      "exception": "ValidationError"
+    },
+    {
+      "case": "Review ohne tatsächliche Prüfmetadaten",
+      "result": "rejected",
+      "exception": "ValidationError"
+    },
+    {
+      "case": "Pfad verlässt Paket",
+      "result": "rejected",
+      "exception": "ValidationError"
+    },
+    {
+      "case": "Modell ohne Modellmetadaten",
+      "result": "rejected",
+      "exception": "ValidationError"
+    },
+    {
+      "case": "Ressource ohne Rechte",
+      "result": "rejected",
+      "exception": "ValidationError"
+    },
+    {
+      "case": "Doppelte Paket-ID in Mitgliedsliste",
+      "result": "rejected",
+      "exception": "ValidationError"
+    },
+    {
+      "case": "Schriftentwicklung auf Sprache",
+      "result": "rejected",
+      "exception": "ValueError"
+    },
+    {
+      "case": "Symmetrische Kante in falscher Richtung",
+      "result": "rejected",
+      "exception": "ValueError"
+    },
+    {
+      "case": "Fehlende Quelle",
+      "result": "rejected",
+      "exception": "ValueError"
+    },
+    {
+      "case": "Ungültiger Schalttag 1900",
+      "result": "rejected",
+      "exception": "ValueError"
+    },
+    {
+      "case": "Jahrespräzision ohne ganze Jahresgrenzen",
+      "result": "rejected",
+      "exception": "ValueError"
+    },
+    {
+      "case": "Beginn nach Ende",
+      "result": "rejected",
+      "exception": "ValueError"
+    },
+    {
+      "case": "Paketzyklus",
+      "result": "rejected",
+      "exception": "ValueError"
+    },
+    {
+      "case": "Doppeltes Eigentümerpaket",
+      "result": "rejected",
+      "exception": "ValueError"
+    },
+    {
+      "case": "Fehlende transitive Paketabhängigkeit",
+      "result": "rejected",
+      "exception": "ValueError"
+    },
+    {
+      "case": "Offener Polygonring",
+      "result": "rejected",
+      "exception": "ValueError"
+    },
+    {
+      "case": "Ungeteilte Linie am Antimeridian",
+      "result": "rejected",
+      "exception": "ValueError"
+    },
+    {
+      "case": "Beweglicher Branch statt Raw-Commit",
+      "result": "rejected",
+      "exception": "ValidationError"
+    },
+    {
+      "case": "Token in Browserkonfiguration",
+      "result": "rejected",
+      "exception": "ValidationError"
+    },
+    {
+      "case": "Fixierter HTTP-Stand ohne Kataloghash",
+      "result": "rejected",
+      "exception": "ValidationError"
+    },
+    {
+      "case": "Remote-URL im gebündelten Profil",
+      "result": "rejected",
+      "exception": "ValidationError"
+    }
+  ],
+  "date_vectors": 13,
+  "date_vector_epoch_days": [
+    -4371953,
+    -735160,
+    -719529,
+    -719528,
+    -719469,
+    -719163,
+    -719162,
+    -683368,
+    -683003,
+    -25508,
+    0,
+    11016,
+    47846
+  ],
+  "glb_structure_checked": true,
+  "historical_release_eligible": false,
+  "unperformed": [
+    "Production semantic validator",
+    "Full polygon topology validation",
+    "Browser rendering and accessibility",
+    "GitHub Raw CORS/MIME/rate-limit integration",
+    "Live MariaDB",
+    "Historical source review",
+    "Actual compiled content index compatibility",
+    "Offline production build"
+  ]
+}

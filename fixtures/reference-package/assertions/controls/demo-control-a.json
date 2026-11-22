@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "0.1.0",
+  "kind": "assertion",
+  "id": "assertion:demo-control-a",
+  "editorial": {
+    "status": "draft"
+  },
+  "synthetic": true,
+  "sourceRefs": [
+    {
+      "sourceId": "source:demo-notes",
+      "role": "supports",
+      "locator": "Fiktiver Vertragsfall, keine historische Aussage"
+    }
+  ],
+  "subjectId": "polity:demo-realm",
+  "predicate": "controls",
+  "objectId": "region:demo-estuary",
+  "time": {
+    "kind": "interval",
+    "start": {
+      "earliest": {
+        "year": 1290,
+        "month": 1,
+        "day": 1
+      },
+      "latest": {
+        "year": 1290,
+        "month": 1,
+        "day": 1
+      },
+      "precision": "day",
+      "qualifier": "exact"
+    },
+    "end": {
+      "earliest": {
+        "year": 1299,
+        "month": 12,
+        "day": 31
+      },
+      "latest": {
+        "year": 1299,
+        "month": 12,
+        "day": 31
+      },
+      "precision": "day",
+      "qualifier": "exact"
+    },
+    "endMeaning": "last-attested"
+  },
+  "epistemic": {
+    "status": "attested"
+  },
+  "spatial": [
+    {
+      "geometryId": "geometry:demo-area-a",
+      "role": "extent"
+    }
+  ]
+}
