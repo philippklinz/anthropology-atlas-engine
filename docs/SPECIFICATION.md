@@ -8,6 +8,14 @@ Dieses Dokument ersetzt die bisherige kurze Weltatlas-Spezifikation. Es beschrei
 
 `MUSS` kennzeichnet eine Abnahmebedingung. `SOLL` ist der Standard, von dem nur mit dokumentierter Begründung abgewichen wird. `KANN` bezeichnet eine optionale Erweiterung. Eine offene Entscheidung ist ausdrücklich als solche bezeichnet. Funktionen späterer Ausbaustufen gelten nicht automatisch als zugesagt für 0.1.0.
 
+## Verbindliche Aktualisierung · direkte Browser-Auslieferung · 22. November 2026
+
+Die jüngere Projektentscheidung ersetzt alle älteren Aussagen dieses Dokuments über TypeScript, Vite, Node/npm, Installationsschritte und Offline-Toolchains: Das Repository MUSS unmittelbar als statische Website funktionieren. Anwendung, Autorenwerkzeug und Tests verwenden direkt ausführbares Browser-JavaScript. Fertige Bibliotheken, Worker, Fonts und Grundkarte werden mitgeliefert. Bibliotheksupdates sind bewusste Maintainer-Commits. Kein App-Build und kein Paketmanager sind erforderlich.
+
+`atlas.config.json` ist die zentrale Installationskonfiguration. Standard ist das öffentliche Content-Repo auf `main`; weitere Repos/Branches, feste Commits und lokale oder entfernte HTTP-Kataloge sind konfigurierbar. Branch-Profile verwenden `on-reload`; fixe Commit-Profile bleiben mit Katalog-Hash gepinnt. Ein leerer Entwurfskatalog darf `packages: []` und `defaultChapterId: null` besitzen, historische Releases bleiben davon ausgeschlossen. Die synthetische Demo wird nur ausdrücklich über `?demo=1` geöffnet.
+
+Die aktuelle Dateistruktur liegt direkt im Repo-Wurzelverzeichnis: `index.html`, `authoring.html`, `src/`, `vendor/`, `fonts/`, `basemap/`, `licenses/`, `demo/content/`. `public/` und `dist/` entfallen. Browserbasierte Inhaltsprüfung und ZIP-Export ersetzen die Node-CLI. Details: [Architekturentscheidung 0002](decisions/0002-native-browser-distribution.md) und [Konfiguration](CONFIGURATION.md). Die fachlichen Regeln und Abnahmeziele bleiben gültig.
+
 ## 1. Produkt und Erkenntnismodell
 
 Die erste Ansicht zeigt einen drehbaren Globus, eine Zeitsteuerung und einen verständlichen Einstieg in einen ausgewählten Geschichtsraum. Besucher können von einem Ort zu einem Herrschaftsbereich, von dort zu einer Handelsbeziehung, einer Person, einer Sprache oder einem Gegenstand wechseln. Karte, Zeitleiste, Beziehungsnetz und Detailansicht zeigen unterschiedliche Ansichten derselben Datensätze.

@@ -1,15 +1,5 @@
-# Prüfskript für das Spezifikationspaket
+# Contract checks
 
-`check-fixture.py` reproduziert die strukturellen und ausgewählten semantischen Prüfungen dieses Reviews. Es ist ein eng auf den beigefügten Vertragsbestand begrenztes Prüfskript, kein fertiger Produktionsvalidator und kein vollständiger CLI-Vertrag.
+Open `../index.html` through the same HTTP server as the atlas. The browser suite exercises the authoritative JSON Schema/semantic validator, calendar arithmetic, negative references, topology, catalogue export and integrity. It runs with the shipped libraries and requires no package manager or external Python modules.
 
-Geprüfte Umgebung: Python 3.12.14, jsonschema 4.26.0 und Node.js 24.22.3. Diese Werkzeuge sind für dieses Spezifikationspaket nicht vendoriziert; die spätere Engine muss ihr eigenes vorbereitetes Toolchainprofil und alle Projektabhängigkeiten wie spezifiziert bereitstellen. Das Skript führt selbst keine Downloads aus.
-
-Mit bereits installierten Werkzeugen:
-
-```bash
-python3 tests/contract/check-fixture.py
-```
-
-Das Ergebnis wird unter `tests/contract/spec-check-results.json` geschrieben. Die Prüfung erfasst vier Schemas, den fiktiven Bestand, Referenzen, Paketabhängigkeiten, einige Geometriegrundregeln, Negativfälle und Kalenderwerte im Vergleich zu einem UTC-JavaScript-Adapter.
-
-Nicht abgedeckt sind insbesondere vollständige Polygon-Topologie, alle künftigen semantischen Regeln, Browserdarstellung, echter Content-Compiler, GitHub-Raw-Hosting, produktiver Offline-Build und historische Recherche. Ein grüner Lauf ist deshalb keine Freigabe einer historischen Veröffentlichung.
+The earlier review-only Python/Node checker was removed. `spec-check-results.json` is a historical review snapshot, not current test evidence. Current observations are recorded in `../browser/RESULTS.md`.

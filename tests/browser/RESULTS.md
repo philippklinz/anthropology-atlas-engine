@@ -1,3 +1,13 @@
+# Native distribution observations · 2026-11-22 · 0.1.0-dev.2
+
+The preview serves repository files directly with an ordinary static server, without Node/npm/Vite. Eighteen checks at `tests/index.html` passed, including a real module worker that processes `basemap/land.geojson`; this worker test does not require WebGL. The authoring UI successfully imported the empty content ZIP, validated it and downloaded a draft catalogue ZIP. DE/EN UI remains available.
+
+The demo rendered the local land, fictional features, chapter text, local fonts and timeline through native JavaScript modules. This Chromium environment lacks WebGL2: the map uses the SVG fallback. GPU MapLibre/Three.js rendering remains unverified. The missing MapLibre worker is now included and its actual GeoJSON processing is tested, but that is not a substitute for the user's GPU/browser check.
+
+Additional dev.2 UI checks: chapter navigation, DE/EN change, browser Back/Forward and reload restore the selected language/chapter. The native standalone vis-network renders a canvas. A direct model URL with at=0 loads the local Three.js add-ons and GLB through the SVG fallback and displays 1 BCE. A relative local empty-content profile renders the connected-source welcome view and globe; no fixture history is substituted.
+
+The observations below are retained as **historical dev.1 results**, not current build instructions or proof of complete dev.2 acceptance.
+
 # Browser observations · 2026-11-22
 
 First development slice, `0.1.0-dev.1`. These are manual observations in the connected Chromium browser, not a claim that all cases in `navigation-cases.json` pass.
