@@ -1,4 +1,4 @@
-# Development status · 0.1.0-dev.6
+# Development status · 0.1.0-dev.7
 
 2026-11-22. First executable slice; M0, M1, M2 and M3 are **not yet complete**.
 
@@ -46,3 +46,7 @@ The chapter-explorer branch also adds separate 10k/100k discovery benchmarks. Me
 ## Deep-time chapter support · dev.6
 
 37/37 native browser test groups pass, including six new deep-time groups. The calendar domain now reaches astronomical year -1000000; BP uses a fixed 1950 reference, with explicit statistical date envelopes and older-than constraints. Specimens/taxa and verified local raster-image viewing are implemented. The compiler derives capability requirements. Content authoring validation accepted 188 draft records with zero errors and warnings. Decision 0004 documents semantics, compatibility and remaining limits. GPU rendering and independent historical review remain outstanding.
+
+## Genetic relationships · dev.7
+
+Two typed predicates distinguish ancestry in a taxonomic lineage from kinship between sampled individuals. Specific evidence and an explanatory note are required; spatial routes and territorial extents are rejected. The compiler derives the capability and the viewer accepts it. No dependencies or installation steps were added. All 39 native browser test groups passed, including positive/indexed and negative genetics cases. Existing chapter behavior is retained. Independent historical review and GPU rendering remain outside these tests.

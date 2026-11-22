@@ -344,6 +344,35 @@
         "de": "gilt als Epoche für",
         "en": "is a period applied to"
       }
+    },
+    "has-genetic-ancestry-from": {
+      "subjectTypes": [
+        "person",
+        "specimen"
+      ],
+      "objectTypes": [
+        "taxon"
+      ],
+      "symmetric": false,
+      "labels": {
+        "de": "hat genetische Vorfahren unter",
+        "en": "has genetic ancestry from"
+      }
+    },
+    "genetically-related-to": {
+      "subjectTypes": [
+        "person",
+        "specimen"
+      ],
+      "objectTypes": [
+        "person",
+        "specimen"
+      ],
+      "symmetric": true,
+      "labels": {
+        "de": "ist genetisch verwandt mit",
+        "en": "is genetically related to"
+      }
     }
   },
   "eventRoles": {
@@ -418,6 +447,7 @@
     "script-samples",
     "deep-time",
     "natural-history",
-    "image-viewer"
+    "image-viewer",
+    "genetic-relationships"
   ]
 }

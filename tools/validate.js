@@ -129,6 +129,12 @@ export async function validate(workspace, profile) {
                     throw new Error('RELATION_TYPES: incompatible endpoints');
                 if (rule.symmetric && r.subjectId >= r.objectId)
                     throw new Error('RELATION_DIRECTION: symmetric endpoints must be sorted');
+                if (['has-genetic-ancestry-from','genetically-related-to'].includes(r.predicate)) {
+                    if (!r.note || !r.sourceRefs.some(ref => ref.role === 'supports' && ref.locator?.trim()))
+                        throw new Error('GENETIC_EVIDENCE: explain the genetic inference and cite its specific evidence');
+                    if (r.spatial?.some(s => s.role !== 'connection'))
+                        throw new Error('GENETIC_SPATIAL: genetic relationships may have a connection, never a migration route or territorial extent');
+                }
                 if (r.predicate === 'extent-of' && !r.spatial?.some(s => s.role === 'extent'))
                     throw new Error('SPATIAL_REQUIRED: extent-of requires an extent');
             });

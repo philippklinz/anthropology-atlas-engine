@@ -68,7 +68,7 @@ export class StaticProvider {
                 throw new Error('CATALOG_DUPLICATE: ' + f.path);
             paths.add(f.path);
         }
-        if (p.catalog.requiredCapabilities.some(c => !['geo-basic', 'historical-time', 'network-basic', 'model-viewer', 'script-samples', 'deep-time', 'natural-history', 'image-viewer'].includes(c)))
+        if (p.catalog.requiredCapabilities.some(c => !['geo-basic', 'historical-time', 'network-basic', 'model-viewer', 'script-samples', 'deep-time', 'natural-history', 'image-viewer', 'genetic-relationships'].includes(c)))
             throw new Error('CAPABILITY_UNSUPPORTED');
         p.sourceKey = p.config.instanceId + '-' + (await digest(new TextEncoder().encode(p.catalogURL.href))).slice(0, 12);
         const e = p.catalog.entrypoints;

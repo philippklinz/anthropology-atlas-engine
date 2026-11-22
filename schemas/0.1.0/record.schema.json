@@ -1127,7 +1127,9 @@
             "script-derived-from",
             "uses-technology",
             "attested-at",
-            "period-applies-to"
+            "period-applies-to",
+            "has-genetic-ancestry-from",
+            "genetically-related-to"
           ]
         },
         "objectId": {
@@ -2176,7 +2178,8 @@
               "script-samples",
               "deep-time",
               "natural-history",
-              "image-viewer"
+              "image-viewer",
+              "genetic-relationships"
             ]
           },
           "minItems": 0,

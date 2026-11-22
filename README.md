@@ -1,6 +1,6 @@
 # Anthropology Atlas Engine
 
-An open, static atlas of people, places and connections through time. Development version 0.1.0-dev.6. The default content source offers four sourced historical research drafts: early Homo sapiens in Africa (approximately 350,000–200,000 years BP), Columbus's first voyage (1492–1493), the first circumnavigation (1519–1522), and Darwin's Beagle voyage (1831–1836).
+An open, static atlas of people, places and connections through time. Development version 0.1.0-dev.7. The default content source offers sourced historical research drafts, including: early Homo sapiens in Africa (approximately 350,000–200,000 years BP), Columbus's first voyage (1492–1493), the first circumnavigation (1519–1522), and Darwin's Beagle voyage (1831–1836).
 
 ## Run and configure
 
