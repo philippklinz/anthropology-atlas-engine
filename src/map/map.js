@@ -1,5 +1,6 @@
 import { Map as GlobeMap, NavigationControl, ScaleControl, setWorkerUrl } from '../../vendor/maplibre/maplibre-gl.mjs';
 setWorkerUrl(new URL('../../vendor/maplibre/maplibre-gl-worker.mjs', import.meta.url).href);
+import { selectionLayers, selectionFilter } from './selection.js';
 const CIRCUMFERENCE = 40075016.686;
 export class AtlasMap {
     map;
@@ -21,7 +22,7 @@ export class AtlasMap {
             this.map.addLayer({ id: 'outlines', type: 'line', source: 'historical', filter: ['==', ['geometry-type'], 'Polygon'], paint: { 'line-color': '#00726d', 'line-width': 2 } });
             this.map.addLayer({ id: 'connections', type: 'line', source: 'historical', filter: ['==', ['geometry-type'], 'LineString'], paint: { 'line-color': '#9e613f', 'line-width': 2.5, 'line-dasharray': [2, 2] } });
             this.map.addLayer({ id: 'places', type: 'circle', source: 'historical', filter: ['==', ['geometry-type'], 'Point'], paint: { 'circle-radius': 6, 'circle-color': '#006f6b', 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 2 } });
-            this.map.addLayer({ id: 'selection', type: 'line', source: 'historical', filter: ['==', ['get', 'recordId'], ''], paint: { 'line-color': '#202325', 'line-width': 4 } });
+            for (const layer of selectionLayers()) this.map.addLayer(layer);
             if (this.pending)
                 this.setFeatures(this.pending, this.selected);
         });
@@ -39,6 +40,6 @@ export class AtlasMap {
     camera() { const c = this.map.getCenter(); return { longitude: ((c.lng + 180) % 360 + 360) % 360 - 180, latitude: Math.max(-85, Math.min(85, c.lat)), metersPerPixel: Math.max(200, CIRCUMFERENCE * Math.cos(c.lat * Math.PI / 180) / (512 * 2 ** this.map.getZoom())), bearing: this.map.getBearing(), pitch: this.map.getPitch() }; }
     setCamera(c) { this.setting = true; this.map.jumpTo({ center: [c.longitude, c.latitude], zoom: this.zoom(c), bearing: c.bearing ?? 0, pitch: c.pitch ?? 0 }); this.setting = false; }
     setFeatures(f, selected) { this.pending = f; this.selected = selected; if (!this.ready)
-        return; this.map.getSource('historical').setData(f); this.map.setFilter('selection', ['==', ['get', 'recordId'], selected ?? '']); }
+        return; this.map.getSource('historical').setData(f); for (const layer of selectionLayers(selected)) this.map.setFilter(layer.id,layer.filter); }
     resize() { const previous = this.setting; this.setting = true; try { this.map.resize(); } finally { this.setting = previous; } }
 }

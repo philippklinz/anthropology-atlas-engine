@@ -22,3 +22,9 @@ Zusätzliche semantische Regeln stehen in den Abschnitten 4–10 und 16 der Gesa
 - Dateipfade, Geometrietyp, Ringtopologie und Dateline;
 - Reviewstatus, Quellenrollen, Fundstellen und lokale Ressourcenrechte;
 - zulässige Runtime-Origins, Katalogrevision, Dateien und Ressourcenbudgets.
+
+## Chapter discovery extension (draft)
+
+`chapter.recordIds` is explicit reading membership, with reference closure and focus coverage checked semantically. `chapter.discovery` contains a localized summary and `periods`, `regions`, `topics` arrays of `{id, labels, description?}` facets. IDs are stable slugs; repeated facets should use identical labels/descriptions. Citation pointers can target discovery fields. New discovery metadata requires explicit membership.
+
+Catalogues may add `entrypoints.discovery` and file role `discovery`. Older catalogues remain readable; re-export them to avoid the necessarily incomplete highlight-based membership fallback. See decision 0003.

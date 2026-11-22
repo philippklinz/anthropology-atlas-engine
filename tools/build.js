@@ -5,7 +5,7 @@ export {sha256};
 import { normalizeTime } from '../src/domain/time.js';
 import { geometryBBox, normalizeWinding } from './geometry.js';
 import { validate, makeValidators } from './validate.js';
-export const COMPILER_VERSION = '0.1.0-dev.2';
+export const COMPILER_VERSION = '0.1.0-dev.5';
 export function report(v) { return { profile: v.profile, records: v.records.size, errors: v.issues.filter(x => x.severity === 'error').length, warnings: v.issues.filter(x => x.severity === 'warning').length, issues: v.issues }; }
 export async function buildContent(workspace, profile, sourceRevision) {
     if (!/^[a-f0-9]{40}$/.test(sourceRevision))
@@ -105,13 +105,25 @@ export async function buildContent(workspace, profile, sourceRevision) {
         for (const id of new Set([edge.from, edge.to]))
             (relations[id] ??= []).push(edge);
     const wrap = (items) => ({ indexVersion: '1', dataReleaseId, items });
+    // Reading membership is authored independently of technical package ownership.
+    for (const chapter of index.chapters) for (const id of [chapter.id, ...(chapter.recordIds ?? [])]) {
+        if (index.records[id]) (index.records[id].chapterIds ??= []).push(chapter.id);
+    }
+    const discovery = await json('discovery', 'discovery', wrap(index.chapters.map(chapter => ({
+        id: chapter.id, kind: 'chapter', labels: chapter.labels, initialState: chapter.initialState,
+        discovery: chapter.discovery ?? {summary: {}, periods: [], regions: [], topics: []},
+        searchTerms: [...new Set((chapter.recordIds ?? chapter.focusIds).flatMap(id => {
+            const record = registry.get(id);
+            return record?.kind === 'entity' || record?.kind === 'event' ? [...Object.values(record.labels ?? {}), ...(record.names ?? []).map(n => n.text)] : [];
+        }))]
+    }))));
     const recordIndex = await json('record-index', 'record-index', index);
     const searches = {};
     for (const lang of langs)
         searches[lang] = await json('search', 'search-' + lang, wrap(search));
     const time = await json('time', 'time', wrap(times)), relationPath = await json('relations', 'relations', wrap(relations)), spatialPath = await json('spatial', 'spatial', wrap(spatial));
     const licenseInventory = await json('licenses', 'licenses', wrap(compiled.filter(r => r.kind === 'geometry' || r.kind === 'asset').map(r => ({ id: r.id, ...(r.kind === 'geometry' || r.kind === 'asset' ? r.rights : {}) }))));
-    const catalog = { catalogVersion: '1', schemaVersion: '0.1.0', indexVersion: '1', dataReleaseId, sourceRevision, compilerVersion: COMPILER_VERSION, packages, languages: langs, requiredCapabilities: caps, files: files.sort((a, b) => a.path.localeCompare(b.path)), entrypoints: { recordIndex, search: searches, time, relations: relationPath, spatial: spatialPath, defaultChapterId: chapters[0]?.id ?? null }, licenseInventory };
+    const catalog = { catalogVersion: '1', schemaVersion: '0.1.0', indexVersion: '1', dataReleaseId, sourceRevision, compilerVersion: COMPILER_VERSION, packages, languages: langs, requiredCapabilities: caps, files: files.sort((a, b) => a.path.localeCompare(b.path)), entrypoints: { discovery, recordIndex, search: searches, time, relations: relationPath, spatial: spatialPath, defaultChapterId: chapters[0]?.id ?? null }, licenseInventory };
     const validators = await makeValidators();
     if (!validators.catalog(catalog))
         throw new Error('BUILD_CATALOG: ' + JSON.stringify(validators.catalog.errors));

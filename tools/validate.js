@@ -155,6 +155,17 @@ export async function validate(workspace, profile) {
             }
         }
         if (r.kind === 'chapter') {
+            if (r.recordIds) {
+                const members = new Set(r.recordIds);
+                for (const id of r.focusIds) if (!members.has(id)) fail('CHAPTER_FOCUS', 'Focus is outside explicit chapter membership: ' + id);
+                for (const id of r.recordIds) {
+                    const member = records.get(id);
+                    if (['chapter', 'package'].includes(member?.kind)) fail('CHAPTER_MEMBER', 'Membership must contain content records, not chapters or packages: ' + id);
+                    for (const ref of references(member)) if (!members.has(ref.id)) fail('CHAPTER_REFERENCE', 'Chapter member references an object outside its membership: ' + ref.id);
+                }
+                for (const ref of references({...r, recordIds: []})) if (!members.has(ref.id)) fail('CHAPTER_REFERENCE', 'Chapter reference outside membership: ' + ref.id);
+            }
+            if (r.discovery && !r.recordIds) fail('CHAPTER_MEMBERSHIP', 'Discoverable chapters require explicit recordIds');
             for (const c of r.interpretationChoices ?? []) {
                 const group = records.get(c.interpretationId);
                 if (group?.kind !== 'interpretation' || !group.memberIds.includes(c.assertionId))

@@ -33,3 +33,9 @@ Open **[tests/index.html](tests/index.html)** for browser checks. Optional CI/fi
 [Specification](docs/SPECIFICATION.md) · [Status and limitations](docs/STATUS.md) · [Architecture decision](docs/decisions/0002-native-browser-distribution.md)
 
 The existing GNU GPL v2 [LICENSE](LICENSE) is preserved. [Third-party notices](THIRD_PARTY_NOTICES.md) list the shipped open-source components and local license texts. Updates are explicit maintainer changes; nothing downloads newer code at runtime.
+
+### Chapter selection
+
+The homepage opens a searchable chapter explorer. Select one or more chapters, then open the atlas. “Edit selection” changes the set; clicking a selected chapter changes only the description in focus. Categories and counts cover selected chapters across all dates. Map time remains a separate filter. Direct atlas links restore selection without visiting the explorer.
+
+Run `tests/index.html` for browser checks and `tests/discovery-benchmark.html` for the separate synthetic discovery load test. No package installation or application build is required. See `docs/decisions/0003-chapter-discovery.md` for the draft content contract and measured limits.
