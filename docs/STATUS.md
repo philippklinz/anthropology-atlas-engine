@@ -1,4 +1,4 @@
-# Development status · 0.1.0-dev.5
+# Development status · 0.1.0-dev.6
 
 2026-11-22. First executable slice; M0, M1, M2 and M3 are **not yet complete**.
 
@@ -37,8 +37,12 @@ The authoring UI imported the committed content sources (214 selected files) for
 - WebGL2 MapLibre/Three.js checks, models anchored on the globe, horizon/polar/dateline behavior and measured 200 m/CSS-pixel zoom.
 - Extended public GitHub Raw media and large-payload hosting tests; the small historical sample does not establish large-payload compatibility.
 - Full 18-case browser acceptance, narrow-screen/touch checks, focus/scroll restoration, complete filter UI, chapter steps, interpretation selection UI and timeline range gestures.
-- Independent historical review of all three research drafts and a reviewed historical release. Shared package reuse is now exercised by the maritime chapters; no synthetic fixture enters the content repository.
+- Independent historical review of all research drafts and a reviewed historical release. Shared package reuse is now exercised by the maritime chapters; no synthetic fixture enters the content repository.
 
 The two additional voyage drafts and panel controls were explicitly requested to evaluate navigation with multiple chapters. The remaining M0/M1 gaps are still open; this addition does not establish general historical-release or large-library readiness.
 
 The chapter-explorer branch also adds separate 10k/100k discovery benchmarks. Measurements and production-scale limits are documented in decision 0003. The authoring UI exported 158 historical draft records from committed source 2ee19d3f3701af9b401febf2824adbd4d886e706 as draft-d758afe3685c558ed816 (zero errors/warnings). See browser results for the observed selection, membership, highlighting and history behavior.
+
+## Deep-time chapter support · dev.6
+
+37/37 native browser test groups pass, including six new deep-time groups. The calendar domain now reaches astronomical year -1000000; BP uses a fixed 1950 reference, with explicit statistical date envelopes and older-than constraints. Specimens/taxa and verified local raster-image viewing are implemented. The compiler derives capability requirements. Content authoring validation accepted 188 draft records with zero errors and warnings. Decision 0004 documents semantics, compatibility and remaining limits. GPU rendering and independent historical review remain outstanding.

@@ -28,3 +28,7 @@ Zusätzliche semantische Regeln stehen in den Abschnitten 4–10 und 16 der Gesa
 `chapter.recordIds` is explicit reading membership, with reference closure and focus coverage checked semantically. `chapter.discovery` contains a localized summary and `periods`, `regions`, `topics` arrays of `{id, labels, description?}` facets. IDs are stable slugs; repeated facets should use identical labels/descriptions. Citation pointers can target discovery fields. New discovery metadata requires explicit membership.
 
 Catalogues may add `entrypoints.discovery` and file role `discovery`. Older catalogues remain readable; re-export them to avoid the necessarily incomplete highlight-based membership fallback. See decision 0003.
+
+## Deep-time and natural-history extension (draft, dev.6)
+
+Calendar years now accept -1000000 through 2100. `timeEstimate` accepts the original calendar shape or `ageEstimate` with `basis: years-before`, fixed `referenceYear: 1950`, integer `older`/`younger` ages, year precision, qualifier, and optional central age and uncertaintySigma. `time.kind: before` has `bound` and an explicitly unknown older limit. Null interval endpoints retain their earlier undated semantics. `specimen` and `taxon` are distinct entity types/namespaces. Raster image viewing supports validated JPEG, PNG and WebP payloads, not SVG/HTML. The compiler derives the corresponding capability flags even if a package omits them. See decision 0004 for normalization and compatibility.

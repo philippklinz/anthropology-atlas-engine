@@ -82,3 +82,13 @@ Observed through the real UI against this export:
 Rendering observed here uses the SVG fallback because this environment lacks WebGL2. MapLibre highlight layer structure is covered automatically; GPU appearance remains to be checked in a WebGL2 browser. Synthetic 10k/100k benchmark measurements and their limits are in decision 0003; they do not certify network transfer or 100k-chapter atlas rendering.
 
 Additional UI checks: a fresh tab opened the Rio deep link directly with all three chapters selected; switching the explorer to English retained all three selections. The 390px layout places filters behind an explicit disclosure so search and chapters remain reachable.
+
+## Deep-time extension · 2026-11-22 · dev.6
+
+The native suite reports 37/37 passed in Chromium. New checks cover million-year arithmetic, fixed BP conversion and limits; one-sided age constraints versus undated intervals; linear timeline projection; BP/image URL roundtrips; schema and capability derivation; date envelopes, open starts and projection changes with chapter scope. The historical authoring UI validates 188 draft records with zero errors/warnings. Actual chapter display observations are recorded after export below.
+
+The pinned content toolkit exported `draft-8288a1394df57630badf` from source commit `da30cd8bd3a42294905ed50b3d983558ad11ee6c`: 248 canonical/payload files, 188 records, zero errors and warnings. The archive was produced by the browser authoring UI.
+
+Local HTTP viewing confirmed the short chapter link, three African map points, BP axis with compact ticks, uncertainty/open-start labels, and the scoped list of three natural specimens. Both 576-pixel-wide original images loaded from verified local payloads with their credits. The image route, DE/EN captions, browser Back/Forward, catalogue rights inventory, BP discovery filtering plus reload, chronological four-chapter listing, and combined deep-time/Darwin selection were exercised. Returning to Darwin alone restores 1831–1836 calendar labels. Introductory prose now precedes chapter links and media when a text begins with a heading.
+
+The environment reports WebGL2 unavailable; these observations use the SVG globe fallback. They do not verify MapLibre GPU rendering or constitute independent historical review.

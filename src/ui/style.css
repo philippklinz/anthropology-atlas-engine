@@ -42,3 +42,22 @@
   #main{overflow:auto;grid-template-rows:minmax(220px,45dvh) auto;align-content:start}.stage{min-height:220px}
   #timebar{position:relative}#time-controls{height:auto;min-height:76px;flex-wrap:wrap;gap:8px;padding:8px 12px}
 }
+
+/* Uncertain occurrences are date envelopes, never continuous occupations. */
+.vis-item.uncertain-instant,.vis-item.open-start { background:repeating-linear-gradient(135deg,#e4efea,#e4efea 6px,#d4e5dd 6px,#d4e5dd 8px); border-style:dashed; }
+.vis-item.open-start { border-left:0; }
+.vis-item.vis-selected.uncertain-instant,.vis-item.vis-selected.open-start { border-color:#9b4a1c; background:repeating-linear-gradient(135deg,#ffebd5,#ffebd5 6px,#f3d9b9 6px,#f3d9b9 8px); }
+.time-hint { max-width:27rem; }
+#year { min-width:7.5rem; }
+.current-year { font-size:clamp(1rem,1.5vw,1.35rem); white-space:normal; }
+.content-image { margin:1.5rem 0; background:#fff; }
+.content-image img { display:block; width:100%; height:auto; object-fit:contain; }
+.content-image figcaption { font-family:var(--font-sans,sans-serif); font-size:.875rem; line-height:1.5; color:#4b5e58; margin-top:.75rem; }
+.content-image figcaption small { display:block; margin-top:.5rem; font-size:.8125rem; }
+.content-image > a { display:block; }
+#model:has(.full-image) { overflow:auto; background:#fff; }
+.full-image { padding:2rem; max-width:72rem; margin:auto; }
+.full-image img { max-height:65vh; object-fit:contain; }
+@media(max-width:760px) { .full-image { padding:1rem; } #time-controls .time-hint { flex-basis:100%; font-size:.8125rem; margin:0; } }
+
+.license-inventory li { margin:1rem 0; line-height:1.5; }

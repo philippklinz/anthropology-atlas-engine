@@ -3,9 +3,10 @@ import {Workspace} from './workspace.js';
 import {sha256} from '../src/domain/hash.js';
 export {sha256};
 import { normalizeTime } from '../src/domain/time.js';
+import { walk } from '../src/domain/references.js';
 import { geometryBBox, normalizeWinding } from './geometry.js';
 import { validate, makeValidators } from './validate.js';
-export const COMPILER_VERSION = '0.1.0-dev.5';
+export const COMPILER_VERSION = '0.1.0-dev.6';
 export function report(v) { return { profile: v.profile, records: v.records.size, errors: v.issues.filter(x => x.severity === 'error').length, warnings: v.issues.filter(x => x.severity === 'warning').length, issues: v.issues }; }
 export async function buildContent(workspace, profile, sourceRevision) {
     if (!/^[a-f0-9]{40}$/.test(sourceRevision))
@@ -30,7 +31,14 @@ export async function buildContent(workspace, profile, sourceRevision) {
     const inputFingerprint=await sha256(JSON.stringify(originals)+payloadHashes.join('')+COMPILER_VERSION+sourceRevision+profile);
     const dataReleaseId = `${profile}-${inputFingerprint.slice(0, 20)}`;
     const packages = [...selected].sort(), langs = [...new Set([v.dataset.defaultLanguage,...packages.flatMap(p => v.records.get(p).languages)])].sort();
-    const caps = [...new Set(packages.flatMap(p => v.records.get(p).requiredCapabilities))].sort();
+    const required = new Set(packages.flatMap(p => v.records.get(p).requiredCapabilities));
+    for (const record of originals) {
+        if (['specimen','taxon'].includes(record.entityType)) required.add('natural-history');
+        if (record.kind === 'asset' && record.assetType === 'image') required.add('image-viewer');
+        walk(record, value => { if (value && typeof value === 'object' &&
+            (value.basis === 'years-before' || value.kind === 'before' || value.year < -10000)) required.add('deep-time'); });
+    }
+    const caps = [...required].sort();
     const chapters = originals.filter((r) => r.kind === 'chapter');
     if(!chapters.length && selected.size)throw new Error('BUILD_EMPTY: add an entry chapter');
     const files = [];
@@ -77,12 +85,12 @@ export async function buildContent(workspace, profile, sourceRevision) {
         const chunk = compiled.filter(r => r.id === pk || v.owners.get(r.id) === pk);
         const path = await json('records', pk.split(':')[1], { indexVersion: '1', dataReleaseId, records: Object.fromEntries(chunk.map(r => [r.id, r])) });
         for (const r of chunk)
-            index.records[r.id] = { path, packageId: v.owners.get(r.id) ?? r.id, kind: r.kind, type: r.kind === 'entity' ? r.entityType : r.kind === 'assertion' ? r.predicate : r.kind === 'event' ? r.eventType : r.kind, labels: 'labels' in r ? r.labels : r.kind === 'source' ? { [v.dataset.defaultLanguage]: r.title } : r.kind === 'interpretation' ? r.question : {} };
+            index.records[r.id] = { path, packageId: v.owners.get(r.id) ?? r.id, kind: r.kind, assetType: r.kind === 'asset' ? r.assetType : undefined, type: r.kind === 'entity' ? r.entityType : r.kind === 'assertion' ? r.predicate : r.kind === 'event' ? r.eventType : r.kind, labels: 'labels' in r ? r.labels : r.kind === 'source' ? { [v.dataset.defaultLanguage]: r.title } : r.kind === 'interpretation' ? r.question : {} };
     }
     const times = {}, edges = [], spatial = [], search = [];
     for (const r of compiled) {
         if ('time' in r)
-            times[r.id] = normalizeTime(r.time);
+            times[r.id] = {...normalizeTime(r.time), display: r.time};
         if (r.kind === 'assertion')
             edges.push({ id: r.id, from: r.subjectId, to: r.objectId, predicate: r.predicate, symmetric: v.vocabulary.predicates[r.predicate].symmetric });
         if (r.kind === 'event')

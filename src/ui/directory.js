@@ -2,6 +2,8 @@ import { matchesTypes } from '../query/query.js';
 // Directory scope follows the selected chapters, independent of map time.
 export const categories = [
     { key: 'people', types: ['person'], labels: ['Personen', 'People'] },
+    { key: 'taxa', types: ['taxon'], labels: ['Arten & Verwandtschaft', 'Species & relatives'] },
+    { key: 'specimens', types: ['specimen'], labels: ['Fossilien & Naturfunde', 'Fossils & natural specimens'] },
     { key: 'communities', types: ['community'], labels: ['Völker & Gemeinschaften', 'Peoples & communities'] },
     { key: 'events', types: ['event'], labels: ['Ereignisse & Reisen', 'Events & journeys'] },
     { key: 'places', types: ['place', 'region'], labels: ['Orte & Regionen', 'Places & regions'] },
