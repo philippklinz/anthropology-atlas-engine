@@ -67,7 +67,7 @@ function renderControls(s, ch) {
     catch {
         $('announcer').textContent = s.language === 'de' ? 'Bitte die URL aus der Adresszeile kopieren.' : 'Copy the URL from the address bar.';
     } };
-    const year = 'year' in s.time ? s.time.year : calendarDate(s.time.from).year, rangeEnd = 'year' in s.time ? year : calendarDate(s.time.to - 1).year;
+    const year = 'year' in s.time ? s.time.year : calendarDate(s.time.from).year;
     if (!timeline) {
         $('timebar').innerHTML = '<div id="timeline-resizer" role="separator" aria-orientation="horizontal" aria-controls="timeline" tabindex="0"><span></span></div><div id="time-controls"></div><div id="timeline"></div>';
         timeline = new AtlasTimeline($('timeline'), provider, s, id => router.commit(target(router.state, viewFor(id), id)), year => formYear(router.state, year));
@@ -126,7 +126,8 @@ async function detail(s, ch, ids) {
     if (!ch.id && !s.id) return emptyDetail(s);
     if (r.kind === 'chapter') {
         const file = r.textFiles[s.language] ?? Object.values(r.textFiles)[0], text = new TextDecoder().decode(await provider.bytes(file));
-        const [intro, ...sections] = text.split(/\n\s*\n/);
+        const sections = text.split(/\n\s*\n/);
+        const intro = sections.splice(0, /^#\s/.test(sections[0]) ? 2 : 1).join('\n\n');
         const heroId = r.focusIds.find(id=>provider.index.records[id]?.assetType === 'image');
         const hero = heroId ? await figure(s,await provider.getRecord(heroId)) : ''; 
         return `${common}<h1>${esc(localized(r.labels, s.language))}</h1><div class="chapter-text intro">${prose(intro)}</div>${hero}<h2>${m.explore}</h2>${recordList(s, r.focusIds)}<div class="chapter-text">${prose(sections.join('\n\n'))}</div><details class="metadata"><summary>${m.results} · ${ids.length}</summary>${recordList(s, ids)}</details>${citations(s, r)}${isDemo() ? `<div class="note">${m.demoText}</div>` : ''}`;
@@ -156,7 +157,7 @@ async function detail(s, ch, ids) {
         }
     }
     if (r.kind === 'asset')
-        body += `<p class="lede">${esc(localized(r.alt, s.language))}</p><p>${esc(r.model?.representation === 'symbol' ? m.modelSymbol : r.model?.representation ?? r.assetType)}</p><p class="note">${esc(r.rights.attribution)}</p>`;
+        body += `<p class="lede">${esc(localized(r.alt, s.language))}</p><p>${esc(r.model?.representation === 'symbol' ? m.modelSymbol : r.model?.representation ?? (r.assetType === 'image' ? (s.language === 'de' ? 'Abbildung' : 'Illustration') : r.assetType))}</p><p class="note">${esc(r.rights.attribution)}</p>`;
     if (r.kind === 'source') {
         body += `<p>${esc((r.creators ?? []).join(', '))}</p><p>${esc(r.published ?? '')} ${esc(r.publisher ?? '')}</p>`;
         if (r.url && /^https?:\/\//.test(r.url))

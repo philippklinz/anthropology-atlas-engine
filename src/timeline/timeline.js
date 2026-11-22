@@ -19,7 +19,9 @@ function axisFormat(language, projection) {
                 const year = calendarDate(projection.fromDate(Number(date))).year;
                 const step = scale === 'year' ? 1000 : scale === 'month' ? 100 : 1;
                 const rounded = isDeepYear(year) ? BP_REFERENCE_YEAR-Math.round((BP_REFERENCE_YEAR-year)/step)*step : year;
-                return formatDisplayYear(rounded,language);
+                // BP is explained above the axis; repeating its unit on every tick
+                // makes long six-digit age labels collide.
+                return isDeepYear(rounded) ? new Intl.NumberFormat(language === 'de' ? 'de-DE' : 'en-GB').format(BP_REFERENCE_YEAR-rounded) : formatYear(rounded,language);
             }
             const d = moment.utc(date);
             if (scale === 'year') return formatYear(d.year(), language);
@@ -57,6 +59,8 @@ export class AtlasTimeline {
                 return [];
             const span = t.possible, el = document.createElement('span'), meta = this.provider.index.records[id];
             el.textContent = localized(meta?.labels, language) || localized(labels[meta?.type ?? '']?.labels, language) || id;
+            const relation = this.assertions.get(id);
+            if (relation) el.textContent = `${localized(this.provider.index.records[relation.from]?.labels,language)} · ${localized(labels[relation.predicate]?.labels,language)} · ${localized(this.provider.index.records[relation.to]?.labels,language)}`;
             const group = state.chapters?.length > 1 ? chronological(this.provider.chaptersFor(id,state.chapters))[0]?.id : undefined;
             const uncertainty = t.kind === 'instant' && span.to-span.from > 1;
             const title = document.createElement('span');
@@ -68,6 +72,7 @@ export class AtlasTimeline {
     constructor(container, provider, state, onSelect, onYear) {
         const year = 'year' in state.time ? state.time.year : calendarDate(state.time.from).year;
         this.provider = provider;
+        this.assertions = new Map(Object.values(provider.edges ?? {}).flat().filter(e=>!e.event).map(e=>[e.id,e]));
         this.projection = this.projectionFor(state);
         this.language = state.language;
         this.scope = JSON.stringify([state.chapters ?? [state.chapter],state.time]);
