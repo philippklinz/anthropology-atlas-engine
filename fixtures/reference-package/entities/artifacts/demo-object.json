@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "0.1.0",
+  "kind": "entity",
+  "id": "artifact:demo-object",
+  "editorial": {
+    "status": "draft"
+  },
+  "synthetic": true,
+  "sourceRefs": [
+    {
+      "sourceId": "source:demo-notes",
+      "role": "supports",
+      "locator": "Fiktiver Vertragsfall, keine historische Aussage"
+    }
+  ],
+  "entityType": "artifact",
+  "labels": {
+    "de": "Symbolischer Testgegenstand",
+    "en": "Symbolic test object"
+  },
+  "assetIds": [
+    "asset:demo-symbol"
+  ]
+}

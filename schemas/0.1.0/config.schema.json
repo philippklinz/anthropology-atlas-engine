@@ -1,0 +1,149 @@
+{
+  "type": "object",
+  "properties": {
+    "configVersion": {
+      "const": "1"
+    },
+    "instanceId": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "defaultLanguage": {
+      "type": "string",
+      "minLength": 1
+    },
+    "content": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "const": "http"
+            },
+            "catalogUrl": {
+              "type": "string",
+              "format": "uri",
+              "pattern": "^https?://"
+            },
+            "expectedCatalogSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "updatePolicy": {
+              "enum": [
+                "pinned",
+                "on-reload"
+              ]
+            }
+          },
+          "required": [
+            "mode",
+            "catalogUrl",
+            "updatePolicy"
+          ],
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "updatePolicy": {
+                    "const": "pinned"
+                  }
+                },
+                "required": [
+                  "updatePolicy"
+                ]
+              },
+              "then": {
+                "required": [
+                  "expectedCatalogSha256"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "const": "bundled"
+            },
+            "catalogUrl": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+$"
+            },
+            "expectedCatalogSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "updatePolicy": {
+              "const": "pinned"
+            }
+          },
+          "required": [
+            "mode",
+            "catalogUrl",
+            "expectedCatalogSha256",
+            "updatePolicy"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "const": "github-raw"
+            },
+            "owner": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9-]+$"
+            },
+            "repository": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9_.-]+$"
+            },
+            "commit": {
+              "type": "string",
+              "pattern": "^(?:[a-f0-9]{40}|[a-f0-9]{64})$"
+            },
+            "catalogPath": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+$"
+            },
+            "expectedCatalogSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "updatePolicy": {
+              "const": "pinned"
+            }
+          },
+          "required": [
+            "mode",
+            "owner",
+            "repository",
+            "commit",
+            "catalogPath",
+            "expectedCatalogSha256",
+            "updatePolicy"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    }
+  },
+  "required": [
+    "configVersion",
+    "instanceId",
+    "defaultLanguage",
+    "content"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:anthropology-atlas:config:1"
+}

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "0.1.0",
+  "kind": "entity",
+  "id": "language:demo-language",
+  "editorial": {
+    "status": "draft"
+  },
+  "synthetic": true,
+  "sourceRefs": [
+    {
+      "sourceId": "source:demo-notes",
+      "role": "supports",
+      "locator": "Fiktiver Vertragsfall, keine historische Aussage"
+    }
+  ],
+  "entityType": "language",
+  "labels": {
+    "de": "Fiktive Sprache",
+    "en": "Fictional language"
+  }
+}

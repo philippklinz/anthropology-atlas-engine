@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "0.1.0",
+  "kind": "assertion",
+  "id": "assertion:demo-script-descent",
+  "editorial": {
+    "status": "draft"
+  },
+  "synthetic": true,
+  "sourceRefs": [
+    {
+      "sourceId": "source:demo-notes",
+      "role": "supports",
+      "locator": "Fiktiver Vertragsfall, keine historische Aussage"
+    }
+  ],
+  "subjectId": "script:demo-script",
+  "predicate": "script-derived-from",
+  "objectId": "script:demo-parent-script",
+  "time": {
+    "kind": "unknown"
+  },
+  "epistemic": {
+    "status": "attested"
+  }
+}

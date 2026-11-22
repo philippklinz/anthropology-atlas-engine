@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "0.1.0",
+  "kind": "package",
+  "id": "package:demo-reuse",
+  "editorial": {
+    "status": "draft"
+  },
+  "synthetic": true,
+  "sourceRefs": [],
+  "labels": {
+    "de": "Fiktives Testpaket demo-reuse",
+    "en": "Synthetic fixture package demo-reuse"
+  },
+  "defaultLanguage": "de",
+  "languages": [
+    "de",
+    "en"
+  ],
+  "dependencies": [
+    "package:demo-core"
+  ],
+  "recordIds": [
+    "chapter:demo-reuse"
+  ],
+  "entryChapterIds": [
+    "chapter:demo-reuse"
+  ],
+  "requiredCapabilities": [
+    "geo-basic",
+    "historical-time",
+    "model-viewer",
+    "network-basic"
+  ]
+}

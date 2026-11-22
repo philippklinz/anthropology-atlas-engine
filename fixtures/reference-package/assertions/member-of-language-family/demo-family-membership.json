@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "0.1.0",
+  "kind": "assertion",
+  "id": "assertion:demo-family-membership",
+  "editorial": {
+    "status": "draft"
+  },
+  "synthetic": true,
+  "sourceRefs": [
+    {
+      "sourceId": "source:demo-notes",
+      "role": "supports",
+      "locator": "Fiktiver Vertragsfall, keine historische Aussage"
+    }
+  ],
+  "subjectId": "language:demo-language",
+  "predicate": "member-of-language-family",
+  "objectId": "language-family:demo-family",
+  "time": {
+    "kind": "unknown"
+  },
+  "epistemic": {
+    "status": "attested"
+  }
+}

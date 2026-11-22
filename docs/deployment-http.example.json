@@ -1,0 +1,10 @@
+{
+  "configVersion": "1",
+  "instanceId": "atlas-test",
+  "defaultLanguage": "de",
+  "content": {
+    "mode": "http",
+    "catalogUrl": "https://content.example.org/test/catalog.json",
+    "updatePolicy": "on-reload"
+  }
+}

@@ -1,0 +1,179 @@
+{
+  "type": "object",
+  "properties": {
+    "catalogVersion": {
+      "const": "1"
+    },
+    "schemaVersion": {
+      "const": "0.1.0"
+    },
+    "indexVersion": {
+      "const": "1"
+    },
+    "dataReleaseId": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "sourceRevision": {
+      "type": "string",
+      "pattern": "^(?:[a-f0-9]{40}|[a-f0-9]{64})$"
+    },
+    "compilerVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "packages": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^package:[a-z0-9]+(?:-[a-z0-9]+)*$"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "languages": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "requiredCapabilities": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "geo-basic",
+          "historical-time",
+          "network-basic",
+          "model-viewer",
+          "script-samples"
+        ]
+      },
+      "minItems": 0,
+      "uniqueItems": true
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+$"
+          },
+          "role": {
+            "enum": [
+              "records",
+              "record-index",
+              "search",
+              "time",
+              "relations",
+              "spatial",
+              "geometry",
+              "asset",
+              "text",
+              "licenses"
+            ]
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "mediaType": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "required": [
+          "path",
+          "role",
+          "bytes",
+          "mediaType",
+          "sha256"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "entrypoints": {
+      "type": "object",
+      "properties": {
+        "recordIndex": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+$"
+        },
+        "search": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+$"
+          }
+        },
+        "time": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+$"
+        },
+        "relations": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+$"
+        },
+        "spatial": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+$"
+        },
+        "defaultChapterId": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^chapter:[a-z0-9]+(?:-[a-z0-9]+)*$"
+        }
+      },
+      "required": [
+        "recordIndex",
+        "search",
+        "time",
+        "relations",
+        "spatial",
+        "defaultChapterId"
+      ],
+      "additionalProperties": false
+    },
+    "licenseInventory": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+$"
+    }
+  },
+  "required": [
+    "catalogVersion",
+    "schemaVersion",
+    "indexVersion",
+    "dataReleaseId",
+    "sourceRevision",
+    "compilerVersion",
+    "packages",
+    "languages",
+    "requiredCapabilities",
+    "files",
+    "entrypoints",
+    "licenseInventory"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:anthropology-atlas:catalog:1",
+  "description": "Transport envelope draft. All file paths are relative to the catalog URL. File hashes exclude the catalog itself."
+}

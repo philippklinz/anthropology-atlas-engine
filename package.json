@@ -1,0 +1,41 @@
+{
+  "name": "anthropology-atlas-engine",
+  "version": "0.1.0-dev.1",
+  "private": true,
+  "type": "module",
+  "license": "GPL-2.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test tests/unit/*.test.ts",
+    "validate": "node tools/cli.ts validate",
+    "content:build": "node tools/cli.ts build",
+    "demo": "node tools/demo.ts",
+    "build": "npm run typecheck && vite build",
+    "authoring:build": "node tools/authoring.ts",
+    "vendor": "node tools/vendor.ts"
+  },
+  "dependencies": {
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "d3-geo": "3.1.2",
+    "jsts": "2.12.1",
+    "maplibre-gl": "6.19.0",
+    "moment": "2.31.0",
+    "three": "0.187.0",
+    "vis-data": "8.0.6",
+    "vis-network": "10.1.5",
+    "vis-timeline": "8.5.6"
+  },
+  "devDependencies": {
+    "@types/d3-geo": "3.1.1",
+    "@types/geojson": "7946.0.16",
+    "@types/node": "26.6.6",
+    "@types/three": "0.187.0",
+    "typescript": "7.0.2",
+    "vite": "8.3.8"
+  }
+}

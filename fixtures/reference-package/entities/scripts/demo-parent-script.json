@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "0.1.0",
+  "kind": "entity",
+  "id": "script:demo-parent-script",
+  "editorial": {
+    "status": "draft"
+  },
+  "synthetic": true,
+  "sourceRefs": [
+    {
+      "sourceId": "source:demo-notes",
+      "role": "supports",
+      "locator": "Fiktiver Vertragsfall, keine historische Aussage"
+    }
+  ],
+  "entityType": "script",
+  "labels": {
+    "de": "Fiktive Ausgangsschrift",
+    "en": "Fictional parent script"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "type": "Feature",
+  "id": "geometry:demo-port-b",
+  "geometry": {
+    "type": "Point",
+    "coordinates": [
+      6,
+      51
+    ]
+  },
+  "properties": {}
+}

@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "0.1.0",
+  "kind": "geometry",
+  "id": "geometry:demo-port-a",
+  "editorial": {
+    "status": "draft"
+  },
+  "synthetic": true,
+  "sourceRefs": [
+    {
+      "sourceId": "source:demo-notes",
+      "role": "supports",
+      "locator": "Fiktiver Vertragsfall, keine historische Aussage"
+    }
+  ],
+  "file": "shape.geojson",
+  "geometryType": "Point",
+  "method": "schematic",
+  "accuracy": {
+    "kind": "unknown"
+  },
+  "rights": {
+    "license": "GPL-2.0",
+    "creators": [
+      "Atlas contract fixture"
+    ],
+    "attribution": "Synthetic test data; no historical reconstruction.",
+    "originNote": "Created for this contract fixture."
+  },
+  "processingNote": {
+    "de": "Fiktive Testgeometrie.",
+    "en": "Fictional test geometry."
+  }
+}

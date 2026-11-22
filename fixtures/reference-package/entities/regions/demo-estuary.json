@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "0.1.0",
+  "kind": "entity",
+  "id": "region:demo-estuary",
+  "editorial": {
+    "status": "draft"
+  },
+  "synthetic": true,
+  "sourceRefs": [
+    {
+      "sourceId": "source:demo-notes",
+      "role": "supports",
+      "locator": "Fiktiver Vertragsfall, keine historische Aussage"
+    }
+  ],
+  "entityType": "region",
+  "labels": {
+    "de": "Fiktiver Mündungsraum",
+    "en": "Fictional estuary"
+  }
+}

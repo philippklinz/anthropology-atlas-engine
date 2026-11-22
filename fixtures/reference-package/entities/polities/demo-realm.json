@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "0.1.0",
+  "kind": "entity",
+  "id": "polity:demo-realm",
+  "editorial": {
+    "status": "draft"
+  },
+  "synthetic": true,
+  "sourceRefs": [
+    {
+      "sourceId": "source:demo-notes",
+      "role": "supports",
+      "locator": "Fiktiver Vertragsfall, keine historische Aussage"
+    }
+  ],
+  "entityType": "polity",
+  "labels": {
+    "de": "Fiktiver Herrschaftsverband",
+    "en": "Fictional polity"
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "0.1.0",
+  "kind": "chapter",
+  "id": "chapter:demo-reuse",
+  "editorial": {
+    "status": "draft"
+  },
+  "synthetic": true,
+  "sourceRefs": [],
+  "labels": {
+    "de": "Sprache und Schrift",
+    "en": "Language and writing"
+  },
+  "textFiles": {
+    "de": "de.md",
+    "en": "en.md"
+  },
+  "focusIds": [
+    "language:demo-language",
+    "script:demo-script",
+    "assertion:demo-writing",
+    "assertion:demo-language-descent"
+  ],
+  "initialState": {
+    "camera": {
+      "longitude": 4,
+      "latitude": 50,
+      "metersPerPixel": 30000,
+      "bearing": 0,
+      "pitch": 0
+    },
+    "time": {
+      "kind": "instant",
+      "at": {
+        "earliest": {
+          "year": 1295,
+          "month": 1,
+          "day": 1
+        },
+        "latest": {
+          "year": 1295,
+          "month": 1,
+          "day": 1
+        },
+        "precision": "day",
+        "qualifier": "exact"
+      }
+    },
+    "layers": [
+      "controls",
+      "trades-with"
+    ],
+    "view": "map"
+  },
+  "interpretationChoices": [
+    {
+      "interpretationId": "interpretation:demo-extent",
+      "assertionId": "assertion:demo-control-a",
+      "reason": {
+        "de": "Explizite Testauswahl.",
+        "en": "Explicit test selection."
+      }
+    }
+  ],
+  "modelPlacements": [
+    {
+      "assetId": "asset:demo-symbol",
+      "anchorGeometryId": "geometry:demo-port-a",
+      "scaleMode": "symbolic",
+      "headingDegrees": 0,
+      "altitudeMeters": 0,
+      "symbolScale": 1000
+    }
+  ]
+}

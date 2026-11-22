@@ -1,0 +1,261 @@
+{
+  "planVersion": "1",
+  "status": "partially-observed-see-RESULTS.md",
+  "scope": "Full browser acceptance plan. Selected manual observations for the first executable slice are recorded in RESULTS.md; this file is not an automated test report.",
+  "cases": [
+    {
+      "id": "NAV-01",
+      "key": "direct-entity",
+      "title": "Direkteinstieg ohne Sitzung",
+      "steps": [
+        "Frisches Browserprofil ohne Local Storage öffnen",
+        "Einen Objektlink zu place:demo-port-a direkt laden"
+      ],
+      "expected": [
+        "Entität und Detail werden geladen",
+        "Kein vorheriger Kapitelbesuch erforderlich",
+        "Ergänzte Standardwerte überschreiben keine expliziten URL-Werte"
+      ]
+    },
+    {
+      "id": "NAV-02",
+      "key": "reload-view",
+      "title": "Neuladen einer vollständigen Ansicht",
+      "steps": [
+        "Zeit, Karte, Ebenen, Sprache und Aussage auswählen",
+        "Adresszeile kopieren",
+        "Seite neu laden"
+      ],
+      "expected": [
+        "Inhaltsstand und fachlicher Zustand bleiben gleich",
+        "Keine zusätzliche Startseiten-History-Stufe"
+      ]
+    },
+    {
+      "id": "NAV-03",
+      "key": "new-tab",
+      "title": "Neue Tabs und native Links",
+      "steps": [
+        "Einen tatsächlichen Objektlink mit Strg-/Cmd-Klick oder Mittelklick öffnen",
+        "Link über Kontextmenü kopieren und in frischem Fenster öffnen"
+      ],
+      "expected": [
+        "Native Browseraktionen bleiben verfügbar",
+        "Im neuen Fenster ist dieselbe verlinkte Ansicht erreichbar"
+      ]
+    },
+    {
+      "id": "NAV-04",
+      "key": "manual-url",
+      "title": "Manuell eingegebene Adresse",
+      "steps": [
+        "Hashroute in der Adresszeile ändern und bestätigen",
+        "Denselben Link ohne history.state laden"
+      ],
+      "expected": [
+        "Der Router übernimmt die eingegebene Route",
+        "Kein History-Zustand wird vorausgesetzt"
+      ]
+    },
+    {
+      "id": "NAV-05",
+      "key": "history-chain",
+      "title": "Zurück und Vorwärts über mehrere Inhalte",
+      "steps": [
+        "Kapitel öffnen",
+        "Entität öffnen",
+        "Aussage öffnen",
+        "Quelle öffnen",
+        "Dreimal Zurück, danach dreimal Vorwärts"
+      ],
+      "expected": [
+        "Die fachlichen Ansichten erscheinen in der erwarteten Reihenfolge",
+        "Kamera, Zeit, Filter und Auswahl werden wiederhergestellt",
+        "Keine neuen Einträge durch die Wiederherstellung"
+      ]
+    },
+    {
+      "id": "NAV-06",
+      "key": "gesture",
+      "title": "Eine Geste ist ein Navigationsschritt",
+      "steps": [
+        "Kameraansicht A festhalten",
+        "Karte in einer zusammenhängenden Geste zu B verschieben",
+        "Einmal Zurück und einmal Vorwärts",
+        "Dasselbe mit dem Zeitregler durchführen"
+      ],
+      "expected": [
+        "Zurück führt zu A und Vorwärts zu B",
+        "Keine Einträge für einzelne Frames",
+        "A wurde nicht mit replaceState überschrieben"
+      ]
+    },
+    {
+      "id": "NAV-07",
+      "key": "playback",
+      "title": "Zeitanimation ohne History-Flut",
+      "steps": [
+        "Aus einem übernommenen Zeitpunkt starten",
+        "Zeitanimation laufen lassen und anhalten",
+        "History durch Zurück/Vorwärts prüfen"
+      ],
+      "expected": [
+        "Keine Einträge pro Frame",
+        "Der angehaltene Endzustand ist adressierbar",
+        "Der Ausgangszustand ist erreichbar"
+      ]
+    },
+    {
+      "id": "NAV-08",
+      "key": "same-state",
+      "title": "Keine doppelten Einträge",
+      "steps": [
+        "Dasselbe Objekt im selben normalisierten Kontext erneut wählen",
+        "Eine effektiv unveränderte Geste beenden"
+      ],
+      "expected": [
+        "Keine doppelte fachliche Navigation"
+      ]
+    },
+    {
+      "id": "NAV-09",
+      "key": "direct-model-close",
+      "title": "Direkt geöffnetes Modell schließen",
+      "steps": [
+        "Modell-Link direkt von außerhalb des Atlas öffnen",
+        "Im Atlas die Aktion Zum Atlas oder Schließen ausführen"
+      ],
+      "expected": [
+        "Die Aktion öffnet einen sinnvollen expliziten Atlaszustand",
+        "Kein unbedachtes history.back verlässt die Website"
+      ]
+    },
+    {
+      "id": "NAV-10",
+      "key": "async-navigation",
+      "title": "Schneller Wechsel bei langsamen Daten",
+      "steps": [
+        "Laden von A künstlich verzögern",
+        "B öffnen und zu C weitergehen",
+        "A zuletzt antworten lassen",
+        "Zusätzlich Zurück/Vorwärts während laufender Requests ausführen"
+      ],
+      "expected": [
+        "Nur die aktuelle Navigation darf die Ansicht übernehmen",
+        "Verspätete Requests verändern weder URL noch Auswahl"
+      ]
+    },
+    {
+      "id": "NAV-11",
+      "key": "invalid-target",
+      "title": "Fehlendes Ziel und falscher Datenstand",
+      "steps": [
+        "Nicht vorhandene ID direkt aufrufen",
+        "Nicht verfügbaren dataReleaseId aufrufen"
+      ],
+      "expected": [
+        "Fehler benennt das angefragte Ziel beziehungsweise den Datenstand",
+        "Kein stilles Ausweichen auf anderen historischen Inhalt",
+        "Explizite weiterführende Navigation bleibt möglich"
+      ]
+    },
+    {
+      "id": "NAV-12",
+      "key": "route-version",
+      "title": "Unbekannte Route und Version",
+      "steps": [
+        "Unbekannte Route oder Routenversion aufrufen",
+        "Wesentlich ungültige Zeitangabe übergeben"
+      ],
+      "expected": [
+        "Verständlicher Fehler",
+        "Kein ungeprüfter Fallback auf eine beliebige Zeit"
+      ]
+    },
+    {
+      "id": "NAV-13",
+      "key": "roundtrip",
+      "title": "Vollständiger Zustands-Roundtrip",
+      "steps": [
+        "Einen Zustand mit Raum, Zeitbereich, Filtern, Deutungswahl und geöffnetem Detail serialisieren",
+        "URL mit geleerten Speichern wieder öffnen"
+      ],
+      "expected": [
+        "Normalisierter fachlicher Zustand stimmt überein",
+        "Stabile Kodierung von IDs und Sonderzeichen",
+        "Keine wahrnehmbaren Kamerasprünge durch Rundung"
+      ]
+    },
+    {
+      "id": "NAV-14",
+      "key": "language",
+      "title": "Sprache und Browser-Historie",
+      "steps": [
+        "Ausgewählte Entität auf Deutsch öffnen",
+        "Sprache auf Englisch wechseln",
+        "Zurück und Vorwärts ausführen"
+      ],
+      "expected": [
+        "Sprache folgt dem Navigationsstand",
+        "Raum, Zeit und ausgewähltes Objekt bleiben erhalten"
+      ]
+    },
+    {
+      "id": "NAV-15",
+      "key": "event-deduplication",
+      "title": "Hash- und History-Ereignisse deduplizieren",
+      "steps": [
+        "App-interne Navigation auslösen",
+        "Zurück/Vorwärts ausführen",
+        "Direkten Fragmentwechsel auslösen"
+      ],
+      "expected": [
+        "Jede Zielroute wird nur einmal übernommen",
+        "Keine Ereignisschleife und keine doppelten Einträge"
+      ]
+    },
+    {
+      "id": "NAV-16",
+      "key": "deployment-profiles",
+      "title": "Unterpfad und drei Content-Quellen",
+      "steps": [
+        "Die App unter /atlas/ statt Domainwurzel bereitstellen",
+        "Direktlink und Reload jeweils mit bundled, HTTP und GitHub Raw ausführen"
+      ],
+      "expected": [
+        "Kein Host-Rewrite für Entitätsseiten erforderlich",
+        "IDs und Zustand werden aus der jeweils konfigurierten Quelle aufgelöst",
+        "Ein Queryparameter kann keine beliebige fremde Content-Quelle setzen"
+      ]
+    },
+    {
+      "id": "NAV-17",
+      "key": "focus-title-scroll",
+      "title": "Titel, Fokus und Scrollposition",
+      "steps": [
+        "In einer längeren Suchliste ein Ergebnis öffnen",
+        "Zurück zur Liste gehen",
+        "Quellenansicht öffnen"
+      ],
+      "expected": [
+        "Sinnvoller lokalisierter Dokumenttitel",
+        "Tastaturfokus und Scrollposition kehren in derselben Sitzung sinnvoll zurück",
+        "Frische Direktaufrufe funktionieren ohne diese Zusatzmetadaten"
+      ]
+    },
+    {
+      "id": "NAV-18",
+      "key": "copy-current-preview",
+      "title": "Aktuelle Ansicht teilen",
+      "steps": [
+        "Eine sichtbare Kamera-/Zeitvorschau erzeugen",
+        "Link zu dieser Ansicht kopieren",
+        "Link in frischem Browser öffnen"
+      ],
+      "expected": [
+        "Die kopierte URL enthält den übernommenen sichtbaren Zustand",
+        "Wesentliche Werte fehlen nicht wegen rein lokalem Speicher"
+      ]
+    }
+  ]
+}
