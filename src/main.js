@@ -138,8 +138,11 @@ async function detail(s, ch, ids) {
         body += `<p class="date-label">${esc(formatTime(r.time, s.language))}</p>`;
     if ('summary' in r)
         body += `<p class="lede">${esc(localized(r.summary, s.language))}</p>`;
-    if (r.kind === 'assertion')
+    if (r.kind === 'assertion') {
         body += `<div class="relationship">${link(s, r.subjectId)}<span>${esc(localized(pred[r.predicate]?.labels, s.language))}</span>${link(s, r.objectId)}</div><p class="note">${r.epistemic.status === 'attested' ? m.attested : m.uncertain}</p>`;
+        const explanation = r.note ?? r.epistemic.note;
+        if (explanation) body += `<p class="lede">${esc(localized(explanation, s.language))}</p>`;
+    }
     if (r.kind === 'event') {
         body += `${r.note ? `<p class="lede">${esc(localized(r.note, s.language))}</p>` : ''}<h2>${m.participants}</h2>${`<ul class="record-list">${r.participants.map(p => `<li>${link(s, p.entityId)}<span>${esc(eventRoleLabels[p.role]?.[s.language === 'de' ? 0 : 1] ?? p.role)}</span></li>`).join('')}</ul>`}`;
         if (r.waypoints?.length) body += `<h2>${m.stations}</h2><ol class="waypoints">${r.waypoints.map(w => `<li>${w.placeId ? link(s, w.placeId) : link(s, w.geometryId)}<span class="date-label">${esc(formatTime(w.time, s.language))}</span></li>`).join('')}</ol>`;
