@@ -218,6 +218,8 @@ Entitäten benötigen `entityType` und `labels`. Optional sind `summary`, `names
 | `script` | `scripts` | Schrift oder ausdrücklich definierte Schrifttradition |
 | `technology` | `technologies` | Technik, Verfahren oder Erfindung als Konzept |
 | `artifact` | `artifacts` | Einzelner Gegenstand oder klar bezeichnete Objektklasse |
+| `specimen` | `specimens` | Fossil, natürliche Probe oder klar bezeichnete Fundgruppe |
+| `taxon` | `taxa` | Biologische Art oder andere ausdrücklich bezeichnete taxonomische Einheit |
 | `commodity` | `commodities` | Handelsgut oder Rohstoff |
 | `religion` | `religions` | Religiöse Tradition; nicht identisch mit einer Institution |
 | `period` | `periods` | Benannte Epoche mit eigenem Geltungsbereich |
@@ -288,13 +290,15 @@ Der normalisierte Vertrag verwendet einen proleptischen gregorianischen Rechenka
 | 1 n. Chr. | 1 |
 | 99 n. Chr. | 99 |
 
-Ein normalisiertes Datum besteht immer aus `year`, `month` und `day`. Die tatsächliche Genauigkeit steht zusätzlich in `precision`. Der erste unterstützte Bereich reicht von `year = -10000` bis `year = 2100`. Quelldaten außerhalb dieses Bereichs werden als nicht unterstützt gemeldet und nicht abgeschnitten. Sehr tiefe Vorgeschichte und besondere archäologische Datierungsskalen erhalten später einen eigenen Erweiterungsvertrag.
+Ein normalisiertes Datum besteht immer aus `year`, `month` und `day`. Die tatsächliche Genauigkeit steht zusätzlich in `precision`. Der unterstützte Bereich reicht seit dev.6 von `year = -1000000` bis `year = 2100`. Quelldaten außerhalb dieses Bereichs werden als nicht unterstützt gemeldet und nicht abgeschnitten. Die BP-Erweiterung und explizite Altersuntergrenzen sind in Entscheidung 0004 beschrieben. Andere Datierungsskalen erfordern weiterhin eigene dokumentierte Umrechnungen.
 
 Historische Originalangaben können unter `original` als `text`, `calendar` und optional `conversionNote` erhalten bleiben. Tagesgenaue julianische oder andere Kalenderdaten dürfen nur mit dokumentierter Umrechnung normalisiert werden. Ein unsicheres Datum wird durch eine Umrechnung nicht genauer.
 
+Für Jahreszahlen vor -10000 verwendet die Oberfläche standardmäßig BP (Jahre vor 1950). Dies ändert weder Kalenderumrechnung noch gespeicherte epoch days; BP bedeutet hier keine automatische Radiokohlenstoffkalibrierung.
+
 ### 5.2 Eine Datierung mit Unsicherheit
 
-`TimeEstimate` besitzt `earliest`, `latest`, `precision` und `qualifier`. Beide Grenzen sind **inklusive mögliche Kalendertage**. `precision` ist `day`, `month` oder `year`; `qualifier` ist `exact`, `approximate` oder `uncertain`.
+Die Kalenderform von `TimeEstimate` besitzt `earliest`, `latest`, `precision` und `qualifier`. Beide Grenzen sind **inklusive mögliche Kalendertage**. `precision` ist `day`, `month` oder `year`; `qualifier` ist `exact`, `approximate` oder `uncertain`.
 
 ```json
 {
@@ -309,7 +313,12 @@ Dieses Beispiel bedeutet **„im Jahr 1300; der Tag ist unbekannt“**. `exact` 
 
 Die Grenzen müssen zur Präzision passen: Eine Jahresangabe umfasst ganze mögliche Jahre, eine Monatsangabe ganze mögliche Monate. Bei Tagespräzision sind einzelne Tage oder begründete Tagesbereiche möglich. Ein genaues Jahr hat denselben Jahreswert an beiden Grenzen, ein genauer Monat denselben Monat; ein genauer Tag dieselben Grenzdaten. Eingabehilfen dürfen diese Grenzen erzeugen, aber nicht willkürlich wählen.
 
+Die alternative Altersform lautet `{basis:"years-before", referenceYear:1950, older:420000, younger:380000, central:400000, uncertaintySigma:1, precision:"year", qualifier:"approximate"}`. `central` und `uncertaintySigma` sind optional; Sigma erfordert symmetrische Grenzen um den Zentralwert. Die angegebenen statistischen Grenzen werden als Such- und Darstellungsbereich verwendet, nicht als absolute Wahrscheinlichkeitsgrenzen. Quellen und Notizen erklären die Datierungsmethode.
+
 ### 5.3 Zeitpunkt, Zeitraum und fehlende Datierung
+
+- `{"kind":"before","bound": TimeEstimate}`: expliziter Nachweis „älter als diese datierte Grenze“. Die ältere Grenze bleibt offen; die interne Untergrenze der Engine ist nur ein Abfrageclip, kein behauptetes Alter. Kein vollständig enthaltener Zeitraum und keine Dauer.
+
 
 - `{"kind":"instant","at": TimeEstimate}`: einmaliges Ereignis oder zeitliche Momentaufnahme. Eine unsicher datierte Momentaufnahme behauptet keinen über die ganze Unsicherheitsspanne andauernden Zustand.
 - `{"kind":"interval","start": TimeEstimate|null,"end": TimeEstimate|null,"endMeaning":"ended"|"last-attested"}`: Zustand oder Vorgang. Das Ende bezeichnet den letzten möglichen enthaltenen Tag, nicht den ersten ausgeschlossenen Tag. `last-attested` bedeutet „bis dahin belegt“, nicht „damals beendet“.
@@ -334,7 +343,7 @@ Ein zusätzlicher Zeitraumfilter verwendet `overlap` oder ausdrücklich `contain
 
 ### 5.5 vis-timeline-Adapter
 
-vis-timeline erhält ausschließlich über einen getesteten UTC-Adapter erzeugte Werte. Eigene Achsen- und Tooltipformatierung stellt die historische Jahreszählung her. Die Dokumentation bietet Anpassungen für Zeitdarstellung und Locale; diese allein garantieren noch keine korrekte BCE-Darstellung. [T2]
+vis-timeline erhält ausschließlich über einen getesteten Adapter erzeugte Werte. Bei tiefer Vorgeschichte skaliert dieser linear 1000 historische Tage auf einen Renderer-Tag; Achsen, Cursor und Rückübersetzung verwenden weiter historische Jahre. Datierte Inhalte aller ausgewählten Kapitel bestimmen den Modus, auch wenn der Cursor jüngere Jahre auswählt. Eigene Achsen- und Tooltipformatierung stellt die historische Jahreszählung her. Die Dokumentation bietet Anpassungen für Zeitdarstellung und Locale; diese allein garantieren noch keine korrekte BCE-Darstellung. [T2]
 
 Vor dem weiteren Ausbau sind Jahre vor und nach der Zeitenwende, Jahre 1–99, Schaltjahre, Monatswechsel und negative Jahre zu prüfen. `new Date(year, …)` ist keine allgemeine Konvertierungsfunktion des Atlas; insbesondere die Sonderbehandlung der Jahre 0–99 wird vermieden. [T16] Der Renderer darf keine Browser-Datumsstrings aus Quellen parsen. Die originale Quellenangabe bleibt im Detail sichtbar.
 

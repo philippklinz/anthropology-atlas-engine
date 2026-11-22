@@ -9,7 +9,7 @@
       "properties": {
         "year": {
           "type": "integer",
-          "minimum": -10000,
+          "minimum": -1000000,
           "maximum": 2100
         },
         "month": {
@@ -31,58 +31,14 @@
       "additionalProperties": false
     },
     "timeEstimate": {
-      "type": "object",
-      "properties": {
-        "earliest": {
-          "$ref": "#/$defs/date"
+      "oneOf": [
+        {
+          "$ref": "#/$defs/calendarEstimate"
         },
-        "latest": {
-          "$ref": "#/$defs/date"
-        },
-        "precision": {
-          "enum": [
-            "day",
-            "month",
-            "year"
-          ]
-        },
-        "qualifier": {
-          "enum": [
-            "exact",
-            "approximate",
-            "uncertain"
-          ]
-        },
-        "original": {
-          "type": "object",
-          "properties": {
-            "text": {
-              "type": "string",
-              "minLength": 1
-            },
-            "calendar": {
-              "type": "string",
-              "minLength": 1
-            },
-            "conversionNote": {
-              "type": "string",
-              "minLength": 1
-            }
-          },
-          "required": [
-            "text",
-            "calendar"
-          ],
-          "additionalProperties": false
+        {
+          "$ref": "#/$defs/ageEstimate"
         }
-      },
-      "required": [
-        "earliest",
-        "latest",
-        "precision",
-        "qualifier"
-      ],
-      "additionalProperties": false
+      ]
     },
     "time": {
       "oneOf": [
@@ -152,6 +108,22 @@
             "start",
             "end",
             "endMeaning"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "before"
+            },
+            "bound": {
+              "$ref": "#/$defs/timeEstimate"
+            }
+          },
+          "required": [
+            "kind",
+            "bound"
           ],
           "additionalProperties": false
         }
@@ -569,7 +541,9 @@
             "commodity",
             "religion",
             "period",
-            "concept"
+            "concept",
+            "specimen",
+            "taxon"
           ]
         },
         "labels": {
@@ -1053,6 +1027,48 @@
               }
             }
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "entityType": {
+                "const": "specimen"
+              }
+            },
+            "required": [
+              "entityType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^specimen:[a-z0-9]+(?:-[a-z0-9]+)*$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "entityType": {
+                "const": "taxon"
+              }
+            },
+            "required": [
+              "entityType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^taxon:[a-z0-9]+(?:-[a-z0-9]+)*$"
+              }
+            }
+          }
         }
       ]
     },
@@ -1090,7 +1106,7 @@
         "subjectId": {
           "type": "string",
           "minLength": 1,
-          "pattern": "^(?:place|region|polity|community|organization|person|language|language-family|script|technology|artifact|commodity|religion|period|concept):[a-z0-9]+(?:-[a-z0-9]+)*$"
+          "pattern": "^(?:place|region|polity|community|organization|person|language|language-family|script|technology|artifact|commodity|religion|period|concept|specimen|taxon):[a-z0-9]+(?:-[a-z0-9]+)*$"
         },
         "predicate": {
           "enum": [
@@ -1117,7 +1133,7 @@
         "objectId": {
           "type": "string",
           "minLength": 1,
-          "pattern": "^(?:place|region|polity|community|organization|person|language|language-family|script|technology|artifact|commodity|religion|period|concept):[a-z0-9]+(?:-[a-z0-9]+)*$"
+          "pattern": "^(?:place|region|polity|community|organization|person|language|language-family|script|technology|artifact|commodity|religion|period|concept|specimen|taxon):[a-z0-9]+(?:-[a-z0-9]+)*$"
         },
         "time": {
           "$ref": "#/$defs/time"
@@ -1133,7 +1149,7 @@
           "items": {
             "type": "string",
             "minLength": 1,
-            "pattern": "^(?:place|region|polity|community|organization|person|language|language-family|script|technology|artifact|commodity|religion|period|concept):[a-z0-9]+(?:-[a-z0-9]+)*$"
+            "pattern": "^(?:place|region|polity|community|organization|person|language|language-family|script|technology|artifact|commodity|religion|period|concept|specimen|taxon):[a-z0-9]+(?:-[a-z0-9]+)*$"
           },
           "minItems": 0,
           "uniqueItems": true
@@ -1235,7 +1251,7 @@
               "entityId": {
                 "type": "string",
                 "minLength": 1,
-                "pattern": "^(?:place|region|polity|community|organization|person|language|language-family|script|technology|artifact|commodity|religion|period|concept):[a-z0-9]+(?:-[a-z0-9]+)*$"
+                "pattern": "^(?:place|region|polity|community|organization|person|language|language-family|script|technology|artifact|commodity|religion|period|concept|specimen|taxon):[a-z0-9]+(?:-[a-z0-9]+)*$"
               },
               "role": {
                 "type": "string",
@@ -1758,7 +1774,7 @@
           "items": {
             "type": "string",
             "minLength": 1,
-            "pattern": "^(?:place|region|polity|community|organization|person|language|language-family|script|technology|artifact|commodity|religion|period|concept):[a-z0-9]+(?:-[a-z0-9]+)*$"
+            "pattern": "^(?:place|region|polity|community|organization|person|language|language-family|script|technology|artifact|commodity|religion|period|concept|specimen|taxon):[a-z0-9]+(?:-[a-z0-9]+)*$"
           },
           "minItems": 0,
           "uniqueItems": true
@@ -2157,7 +2173,10 @@
               "historical-time",
               "network-basic",
               "model-viewer",
-              "script-samples"
+              "script-samples",
+              "deep-time",
+              "natural-history",
+              "image-viewer"
             ]
           },
           "minItems": 0,
@@ -2213,6 +2232,112 @@
       "required": [
         "id",
         "labels"
+      ],
+      "additionalProperties": false
+    },
+    "calendarEstimate": {
+      "type": "object",
+      "properties": {
+        "earliest": {
+          "$ref": "#/$defs/date"
+        },
+        "latest": {
+          "$ref": "#/$defs/date"
+        },
+        "precision": {
+          "enum": [
+            "day",
+            "month",
+            "year"
+          ]
+        },
+        "qualifier": {
+          "enum": [
+            "exact",
+            "approximate",
+            "uncertain"
+          ]
+        },
+        "original": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string",
+              "minLength": 1
+            },
+            "calendar": {
+              "type": "string",
+              "minLength": 1
+            },
+            "conversionNote": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "text",
+            "calendar"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "earliest",
+        "latest",
+        "precision",
+        "qualifier"
+      ],
+      "additionalProperties": false
+    },
+    "ageEstimate": {
+      "type": "object",
+      "properties": {
+        "basis": {
+          "const": "years-before"
+        },
+        "referenceYear": {
+          "const": 1950
+        },
+        "older": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1001950
+        },
+        "younger": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1001950
+        },
+        "central": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1001950
+        },
+        "uncertaintySigma": {
+          "enum": [
+            1,
+            2,
+            3
+          ]
+        },
+        "precision": {
+          "const": "year"
+        },
+        "qualifier": {
+          "enum": [
+            "exact",
+            "approximate",
+            "uncertain"
+          ]
+        }
+      },
+      "required": [
+        "basis",
+        "referenceYear",
+        "older",
+        "younger",
+        "precision",
+        "qualifier"
       ],
       "additionalProperties": false
     }

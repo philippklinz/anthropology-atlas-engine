@@ -1,6 +1,6 @@
 # Anthropology Atlas Engine
 
-An open, static atlas of people, places and connections through time. Development version 0.1.0-dev.4. The default content source offers three sourced historical research drafts: Columbus's first voyage (1492–1493), the first circumnavigation (1519–1522), and Darwin's Beagle voyage (1831–1836).
+An open, static atlas of people, places and connections through time. Development version 0.1.0-dev.6. The default content source offers four sourced historical research drafts: early Homo sapiens in Africa (approximately 350,000–200,000 years BP), Columbus's first voyage (1492–1493), the first circumnavigation (1519–1522), and Darwin's Beagle voyage (1831–1836).
 
 ## Run and configure
 
@@ -39,3 +39,7 @@ The existing GNU GPL v2 [LICENSE](LICENSE) is preserved. [Third-party notices](T
 The homepage opens a searchable chapter explorer. Select one or more chapters, then open the atlas. “Edit selection” changes the set; clicking a selected chapter changes only the description in focus. Categories and counts cover selected chapters across all dates. Map time remains a separate filter. Direct atlas links restore selection without visiting the explorer.
 
 Run `tests/index.html` for browser checks and `tests/discovery-benchmark.html` for the separate synthetic discovery load test. No package installation or application build is required. See `docs/decisions/0003-chapter-discovery.md` for the draft content contract and measured limits.
+
+### Prehistory and images
+
+Deep-time chapters use years BP (before 1950) and a linear timeline projection. Hatched date ranges show uncertainty; a left-open bar represents an explicitly older-than constraint. Fossils and biological taxa have separate directory categories. Locally supplied raster images have dedicated URLs and visible rights. See [the draft extension](docs/decisions/0004-deep-time-and-natural-history.md).

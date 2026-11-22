@@ -50,7 +50,10 @@
           "historical-time",
           "network-basic",
           "model-viewer",
-          "script-samples"
+          "script-samples",
+          "deep-time",
+          "natural-history",
+          "image-viewer"
         ]
       },
       "minItems": 0,

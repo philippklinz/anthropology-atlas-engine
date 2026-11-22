@@ -15,7 +15,9 @@
     "commodity": "commodities",
     "religion": "religions",
     "period": "periods",
-    "concept": "concepts"
+    "concept": "concepts",
+    "specimen": "specimens",
+    "taxon": "taxa"
   },
   "predicates": {
     "located-at": {
@@ -23,7 +25,8 @@
         "place",
         "person",
         "artifact",
-        "organization"
+        "organization",
+        "specimen"
       ],
       "objectTypes": [
         "place",
@@ -313,7 +316,9 @@
         "script",
         "technology",
         "artifact",
-        "community"
+        "community",
+        "specimen",
+        "taxon"
       ],
       "objectTypes": [
         "place",
@@ -410,6 +415,9 @@
     "historical-time",
     "network-basic",
     "model-viewer",
-    "script-samples"
+    "script-samples",
+    "deep-time",
+    "natural-history",
+    "image-viewer"
   ]
 }

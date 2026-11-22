@@ -4,7 +4,7 @@ import { walk, references, resolvePointer } from '../src/domain/references.js';
 import { normalizeTime, estimateRange } from '../src/domain/time.js';
 import { safeRelative } from '../src/domain/paths.js';
 import { validateGeometry } from './geometry.js';
-import { validateGLB } from './assets.js';
+import { validateGLB, validateImage } from './assets.js';
 const schemas = new URL('../schemas/0.1.0/', import.meta.url);
 async function schema(name){const r=await fetch(new URL(name,schemas));if(!r.ok)throw new Error('SCHEMA_HTTP: '+r.status);return r.json();}
 export async function makeValidators() {
@@ -102,9 +102,9 @@ export async function validate(workspace, profile) {
             if (!records.has(ref.id))
                 fail('REF_MISSING', `${ref.path}: ${ref.id}`);
         walk(r, (value, path) => check(r, () => {
-            if ('earliest' in value && 'latest' in value)
+            if ('earliest' in value && 'latest' in value || value.basis === 'years-before')
                 estimateRange(value);
-            if (value.kind === 'instant' || value.kind === 'interval' || value.kind === 'unknown')
+            if (value.kind === 'instant' || value.kind === 'interval' || value.kind === 'unknown' || value.kind === 'before')
                 normalizeTime(value);
             if (typeof value.sourceId === 'string') {
                 if (records.get(value.sourceId)?.kind !== 'source')
@@ -200,6 +200,7 @@ export async function validate(workspace, profile) {
                 const bytes = await loadPayload(r, r.file);
                 if (r.assetType === 'model')
                     validateGLB(bytes);
+                if (r.assetType === 'image') validateImage(bytes, r.mediaType);
                 if (r.mediaType === 'image/svg+xml' || r.mediaType === 'text/html')
                     fail('ASSET_ACTIVE', 'Active formats are not supported');
                 if (r.model?.previewFile)

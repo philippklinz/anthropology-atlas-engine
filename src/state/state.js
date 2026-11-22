@@ -1,5 +1,5 @@
-import { epochDay, yearRange, normalizeTime, calendarDate } from '../domain/time.js';
-export const views = ['explore', 'map', 'chapter', 'entity', 'assertion', 'event', 'source', 'network', 'model', 'search', 'about', 'licenses'];
+import { epochDay, yearRange, normalizeTime, calendarDate, MIN_YEAR, MAX_YEAR } from '../domain/time.js';
+export const views = ['explore', 'map', 'chapter', 'entity', 'assertion', 'event', 'source', 'network', 'model', 'image', 'search', 'about', 'licenses'];
 export const uniq = (a) => [...new Set(a)].sort();
 export function defaultState(chapter, sourceKey, release, language = 'de') {
     const t = normalizeTime(chapter.initialState.time), year = t.possible ? calendarDate(t.possible.from).year : 1;
@@ -69,7 +69,7 @@ export function decodeState(hash, defaults, chapters = []) {
     const s = chapter ? defaultState(chapter, defaults.sourceKey, defaults.release, defaults.language) : structuredClone(defaults);
     s.view = parts[2];
     s.id = parts[3] ? decodeURIComponent(parts[3]) : undefined;
-    const required = ['chapter', 'entity', 'assertion', 'event', 'source', 'model'];
+    const required = ['chapter', 'entity', 'assertion', 'event', 'source', 'model', 'image'];
     if (required.includes(s.view) && !s.id)
         throw new Error('URL_TARGET: missing record ID');
     if (s.id && !/^[a-z]+(?:-[a-z]+)*:[a-z0-9]+(?:-[a-z0-9]+)*$/.test(s.id))
@@ -87,12 +87,12 @@ export function decodeState(hash, defaults, chapters = []) {
     if (chapters.length && s.chapters.some(id => !chapters.some(c=>c.id===id))) throw new Error('URL_CHAPTER: selected chapter unavailable');
     if (s.view !== 'explore' && s.chapter && !s.chapters.includes(s.chapter)) throw new Error('URL_CHAPTER: focused chapter is outside the selection');
     s.browse = {};
-    for (const key of ['query','period','region','topic','from','to','page']) if (q.has('browse-'+key)) {
+    for (const key of ['query','period','region','topic','from','to','page','scale']) if (q.has('browse-'+key)) {
         const value = q.get('browse-'+key);
         if (['from','to','page'].includes(key)) {
-            if (!/^-?\d+$/.test(value) || !Number.isSafeInteger(Number(value)) || (key==='page' && Number(value)<0) || (key!=='page' && (Number(value)<-10000 || Number(value)>2100))) throw new Error('URL_BROWSE: invalid number');
+            if (!/^-?\d+$/.test(value) || !Number.isSafeInteger(Number(value)) || (key==='page' && Number(value)<0) || (key!=='page' && (Number(value)<MIN_YEAR || Number(value)>MAX_YEAR))) throw new Error('URL_BROWSE: invalid number');
             s.browse[key] = Number(value);
-        } else s.browse[key] = value;
+        } else { if (key === 'scale' && !['calendar','bp'].includes(value)) throw new Error('URL_BROWSE: invalid date scale'); s.browse[key] = value; }
     }
     if (s.browse.from !== undefined && s.browse.to !== undefined && s.browse.from > s.browse.to) throw new Error('URL_BROWSE: inverted range');
     s.step = q.get('step') ?? undefined;
@@ -109,7 +109,7 @@ export function decodeState(hash, defaults, chapters = []) {
     }
     if (q.has('range')) {
         const [from, to, ...rest] = q.get('range').split(',').map(Number);
-        if (rest.length || ![from, to].every(Number.isInteger) || from >= to || from < epochDay({ year: -10000, month: 1, day: 1 }) || to > epochDay({ year: 2100, month: 12, day: 31 }) + 1)
+        if (rest.length || ![from, to].every(Number.isInteger) || from >= to || from < epochDay({ year: MIN_YEAR, month: 1, day: 1 }) || to > epochDay({ year: MAX_YEAR, month: 12, day: 31 }) + 1)
             throw new Error('URL_TIME: invalid range');
         s.time = { from, to };
     }
