@@ -72,3 +72,15 @@ test('10000 discovery records retain chronological pagination and multiple-word 
  assert.equal(result.total,10000);assert.equal(result.items.length,24);assert.equal(result.pages,417);
  assert.ok(result.items.every(x=>x.chapter.id.startsWith('chapter:load-')));
 });
+test('Browser history restores repeated back, new navigation and forward without skipping an earlier URL',async()=>{
+ const {Router}=await import('../src/state/router.js');
+ const original=location.href,initial=defaultState(a,'history-test','fixture');
+ history.replaceState(null,'',encodeState(initial));
+ let error;const router=new Router(initial,()=>{},e=>{error=e},[a,b]);
+ const travel=direction=>new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('History event timeout')),3000);addEventListener('popstate',()=>{clearTimeout(timer);setTimeout(resolve,0)},{once:true});history[direction]();});
+ try {
+  router.commit(target(initial,'entity','person:one'));await travel('back');assert.equal(router.state.view,'chapter');
+  router.commit(directoryState(router.state,['person']));await travel('back');assert.equal(router.state.view,'chapter');
+  await travel('forward');assert.equal(router.state.view,'search');assert.deepEqual(router.state.chapters,[a.id]);assert.equal(error,undefined);
+ } finally {router.destroy();history.replaceState(null,'',original)}
+});

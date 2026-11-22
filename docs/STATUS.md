@@ -24,7 +24,7 @@
 
 ## Checks
 
-Thirty native browser test groups passed in Chromium: calendar vectors, uncertainty, full URL roundtrip and invalid routes, all source resolvers, dateline windows, fixture/release separation, negative semantic cases, polygon topology, deterministic browser export and payload hashes, ZIP roundtrip, empty draft/release behavior, HTTP catalogue queries, incoming edges, territorial gaps, tamper detection, SHA-256 vectors including its HTTP fallback, and the local MapLibre worker processing the actual land GeoJSON. `python3 scripts/check-static.py` passes without third-party Python modules.
+Thirty-one native browser test groups passed in Chromium: calendar vectors, uncertainty, full URL roundtrip and invalid routes, all source resolvers, dateline windows, fixture/release separation, negative semantic cases, polygon topology, deterministic browser export and payload hashes, ZIP roundtrip, empty draft/release behavior, HTTP catalogue queries, incoming edges, territorial gaps, tamper detection, SHA-256 vectors including its HTTP fallback, and the local MapLibre worker processing the actual land GeoJSON. `python3 scripts/check-static.py` passes without third-party Python modules.
 
 The authoring UI imported the committed content sources (214 selected files) for three historical chapters, validated 157 records and exported draft-3c169a9523d4d5edda2a from source commit 6ccc3ec0ab50db7446b89ad72dc6e8f794626be3 with zero errors/warnings. The pinned content toolkit matches the engine authoring implementation. The three new browser groups cover drawer focus/dismissal and modified links, bounded/persistent timeline height, and timeline windows on chapter changes. This exercised the real browser workflow, not a substitute compiler. See `tests/browser/RESULTS.md` for rendering/navigation observations and limitations.
 
@@ -41,4 +41,4 @@ The authoring UI imported the committed content sources (214 selected files) for
 
 The two additional voyage drafts and panel controls were explicitly requested to evaluate navigation with multiple chapters. The remaining M0/M1 gaps are still open; this addition does not establish general historical-release or large-library readiness.
 
-The chapter-explorer branch also adds separate 10k/100k discovery benchmarks. Measurements and production-scale limits are documented in decision 0003. Historical content export and end-to-end browser acceptance are recorded after integration.
+The chapter-explorer branch also adds separate 10k/100k discovery benchmarks. Measurements and production-scale limits are documented in decision 0003. The authoring UI exported 158 historical draft records from committed source 2ee19d3f3701af9b401febf2824adbd4d886e706 as draft-d758afe3685c558ed816 (zero errors/warnings). See browser results for the observed selection, membership, highlighting and history behavior.

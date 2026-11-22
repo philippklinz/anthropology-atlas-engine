@@ -1,6 +1,6 @@
 import { Map as GlobeMap, NavigationControl, ScaleControl, setWorkerUrl } from '../../vendor/maplibre/maplibre-gl.mjs';
 setWorkerUrl(new URL('../../vendor/maplibre/maplibre-gl-worker.mjs', import.meta.url).href);
-import { selectionLayers, selectionFilter } from './selection.js';
+import { selectionLayers } from './selection.js';
 const CIRCUMFERENCE = 40075016.686;
 export class AtlasMap {
     map;

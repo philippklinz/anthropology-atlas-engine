@@ -38,7 +38,7 @@ function href(s, id, view) { return encodeState(target(s, view ?? viewFor(id), i
 function link(s, id, text, view) { return `<a href="${esc(href(s, id, view))}">${esc(text ?? label(id, s.language))}</a>`; }
 function chapterBadges(s,id) { return `<span class="chapter-badges">${chronological(provider.chaptersFor(id,s.chapters)).map(ch=>`<a class="chapter-badge" href="${esc(encodeState(chapterState(ch,s)))}">${esc(localized(ch.labels,s.language).split(' · ')[0])}</a>`).join('')}</span>`; }
 function recordList(s, ids) { return `<ul class="record-list">${ids.map(id => `<li>${link(s, id)}<span>${esc(typeLabels[provider.index.records[id]?.type ?? '']?.[s.language === 'de' ? 0 : 1] ?? typeLabels[provider.index.records[id]?.kind ?? '']?.[s.language === 'de' ? 0 : 1] ?? '')}</span>${chapterBadges(s,id)}</li>`).join('')}</ul>`; }
-function setError(error) { $('explorer').hidden = true; document.querySelector('.atlas-shell').hidden = false; const msg = error instanceof Error ? error.message : String(error); $('page').hidden = false; $('page').innerHTML = `<div class="reading"><p class="eyebrow">Atlas</p><h1>Diese Ansicht ist nicht verfügbar / View unavailable</h1><p>${esc(msg)}</p><a href="#/v1/map">Zum Atlas / Return to atlas</a><button id="retry">Neu laden / Reload</button></div>`; $('retry').onclick = () => location.reload(); $('announcer').textContent = msg; }
+function setError(error) { document.querySelector('.atlas-shell').inert = false; $('explorer').hidden = true; document.querySelector('.atlas-shell').hidden = false; const msg = error instanceof Error ? error.message : String(error); $('page').hidden = false; $('page').innerHTML = `<div class="reading"><p class="eyebrow">Atlas</p><h1>Diese Ansicht ist nicht verfügbar / View unavailable</h1><p>${esc(msg)}</p><a href="#/v1/map">Zum Atlas / Return to atlas</a><button id="retry">Neu laden / Reload</button></div>`; $('retry').onclick = () => location.reload(); $('announcer').textContent = msg; }
 function formYear(s, year) { if (Number.isInteger(year) && year >= -10000 && year <= 2100)
     router.commit({ ...s, time: { year } }); }
 function chapterState(ch, s) { return { ...s, view:'chapter', id:ch.id, chapter:ch.id, step:undefined, types:[], searchScope:'selection' }; }
@@ -155,7 +155,10 @@ async function render(s, warnings) {
         document.documentElement.lang = s.language;
         const exploring = s.view === 'explore';
         $('explorer').hidden = !exploring;
-        document.querySelector('.atlas-shell').hidden = exploring;
+        const shell=document.querySelector('.atlas-shell');
+        shell.hidden = exploring;
+        shell.inert = !exploring;
+        shell.setAttribute('aria-busy',String(!exploring));
         if (exploring) {
             layout.setOpen(false,false);
             renderExplorer($('explorer'),s,discovery,next=>router.commit(next));
@@ -279,6 +282,7 @@ async function render(s, warnings) {
                 return;
             $('page').innerHTML = `<div class="reading"><p class="eyebrow">${m.licenses}</p><h1>Open Source</h1>${prose(text)}<p><a href="licenses/project.txt" target="_blank">GNU GPL v2</a></p></div>`;
         }
+        if (active()) { shell.inert = false; shell.setAttribute('aria-busy','false'); }
         if (active())
             $('announcer').textContent = warnings.length ? `${warnings.join(', ')} · ${m.reset}` : document.title;
     }
