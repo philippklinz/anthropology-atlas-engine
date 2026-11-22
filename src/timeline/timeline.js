@@ -39,8 +39,9 @@ export class AtlasTimeline {
         const year = 'year' in state.time ? state.time.year : calendarDate(state.time.from).year;
         this.provider = provider;
         this.language = state.language;
+        this.chapter = state.chapter;
         const data = this.items(state.language), window = windowFor(state);
-        const options = { height: 142, rtl: false, showCurrentTime: false, stack: true, zoomable: true, moveable: true, selectable: true, editable: false, verticalScroll: true, start: utcDate(yearRange(Math.max(-10000, year - 15)).from), end: utcDate(yearRange(Math.min(2100, year + 15)).to), min: utcDate(yearRange(-10000).from), max: utcDate(yearRange(2100).to), moment: (d) => moment.utc(d), format: { minorLabels: { year: 'Y' }, majorLabels: { year: '' } }, tooltip: { followMouse: false }, showTooltips: false };
+        const options = { height: '100%', rtl: false, showCurrentTime: false, stack: true, zoomable: true, moveable: true, selectable: true, editable: false, verticalScroll: true, start: utcDate(yearRange(Math.max(-10000, year - 15)).from), end: utcDate(yearRange(Math.min(2100, year + 15)).to), min: utcDate(yearRange(-10000).from), max: utcDate(yearRange(2100).to), moment: (d) => moment.utc(d), format: { minorLabels: { year: 'Y' }, majorLabels: { year: '' } }, tooltip: { followMouse: false }, showTooltips: false };
         // Function labels receive Moment values; custom BCE/CE labels avoid a visible year zero.
         options.format = axisFormat(state.language);
         options.start = utcDate(window.from);
@@ -55,7 +56,8 @@ export class AtlasTimeline {
     update(s) { if (this.language !== s.language) {
         this.language = s.language;
         this.timeline.setItems(this.items(s.language));
-    } const y = 'year' in s.time ? s.time.year : calendarDate(s.time.from).year; this.timeline.setCustomTime(utcDate('year' in s.time ? yearRange(y).from : s.time.from), 'cursor'); this.timeline.setCustomTimeTitle(formatYear(y, s.language), 'cursor'); this.timeline.setOptions({ format: axisFormat(s.language) }); const win = this.timeline.getWindow(); const current = utcDate('year' in s.time ? yearRange(y).from : s.time.from); if (current < win.start || current > win.end)
-        this.timeline.setWindow(utcDate(windowFor(s).from), utcDate(windowFor(s).to), { animation: false }); }
+    } const y = 'year' in s.time ? s.time.year : calendarDate(s.time.from).year; this.timeline.setCustomTime(utcDate('year' in s.time ? yearRange(y).from : s.time.from), 'cursor'); this.timeline.setCustomTimeTitle(formatYear(y, s.language), 'cursor'); this.timeline.setOptions({ format: axisFormat(s.language) }); const win = this.timeline.getWindow(); const current = utcDate('year' in s.time ? yearRange(y).from : s.time.from); if (this.chapter !== s.chapter || current < win.start || current > win.end)
+        this.timeline.setWindow(utcDate(windowFor(s).from), utcDate(windowFor(s).to), { animation: false }); this.chapter = s.chapter; }
+    resize() { this.timeline.redraw(); }
     destroy() { this.timeline.destroy(); }
 }

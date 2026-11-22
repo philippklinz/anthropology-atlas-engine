@@ -1,3 +1,19 @@
+# Three voyages and panel controls · 2026-11-22 · 0.1.0-dev.4
+
+The browser authoring UI imported 214 files archived from committed content source 6ccc3ec0ab50db7446b89ad72dc6e8f794626be3. It validated 157 records with zero errors/warnings and exported draft-3c169a9523d4d5edda2a. The implementation matches the pinned content toolkit. All 54 catalogue payload sizes and SHA-256 hashes were independently checked; earlier hash-named files are retained.
+
+Twenty-three native browser test groups passed. The optional static check passes: local imports/CSS resources, 19 vendor files, licenses and 19 fixture payloads. The three new groups cover drawer focus/dismissal and modified clicks, bounded/persistent panel height including unavailable storage, and chapter-window changes even inside the previous time range.
+
+Manual Chromium checks on the static preview verified:
+
+- Closed menu leaves the main content at x=0. Open navigation overlays it at x=0 with width 320; the map keeps its width. Focus moves to Close; Escape returns it to Menu. Chapter selection closes the drawer.
+- Actual pointer drag expands the panel from 232 to 388 CSS px. ArrowUp changes it to 412 px; the historical URL stays unchanged. Reload preserves that height. Double-click resets to the default.
+- Three chapter links and catalogue counts appear: 11 people, 2 communities, 43 events, 34 places, 5 artifacts, 1 assertion and 17 sources.
+- Darwin's chapter initializes 1831–1836; its journey shows 19 ordered stations. DE → EN → reload retains the event and height; Back/Forward restores German/English.
+- Columbus's chapter initializes 1492–1493, with 10 ordered stations, original Julian dates and visible Guanahani uncertainty/source-critical chapter text.
+
+WebGL2 is unavailable here: visual checks use the SVG fallback. GPU rendering and physical touch-device acceptance remain unverified. Schema and integration checks are not independent historical review. The content repository documents source reading, geography and remaining editorial work.
+
 # Historical sample and directory observations · 2026-11-22 · 0.1.0-dev.3
 
 The default historical sample is maintained in the content repo, not engine fixtures. Browser authoring validated 48 records from 61 files with zero errors/warnings and exported draft-912feca6745a8f341943 from committed source 3814f2f7d39f4c646e301bef4a3a2d5b15fb98ad. Payload hashes pass the optional Python check.

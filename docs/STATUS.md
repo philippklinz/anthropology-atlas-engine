@@ -1,4 +1,4 @@
-# Development status · 0.1.0-dev.3
+# Development status · 0.1.0-dev.4
 
 2026-11-22. First executable slice; M0, M1, M2 and M3 are **not yet complete**.
 
@@ -17,13 +17,15 @@
 - Data-driven category directory with catalogue-wide counts and URL scope, populated and empty category navigation, and filter reset when opening an object.
 - Chapter intervals initialize the full time range; original source-calendar dates are shown separately from calculation dates. Event stations and cited place references are navigable, including derived event/place edges in the network.
 - Historical draft status and chapter citations are visible; the real sample is supplied by the content repo, with no historical records hardcoded into the engine.
+- Overlay navigation drawer on desktop and narrow layouts, with backdrop/Escape dismissal, focus containment and native modified links.
+- Resizable timeline panel with pointer capture, keyboard bounds/reset, optional saved height and redraw of the existing map/timeline; panel changes do not navigate. Chapter changes reset the timeline window.
 - MapLibre module worker is included and explicitly configured, fixing the missing-worker packaging error.
 
 ## Checks
 
-Twenty native browser test groups passed in Chromium: calendar vectors, uncertainty, full URL roundtrip and invalid routes, all source resolvers, dateline windows, fixture/release separation, negative semantic cases, polygon topology, deterministic browser export and payload hashes, ZIP roundtrip, empty draft/release behavior, HTTP catalogue queries, incoming edges, territorial gaps, tamper detection, SHA-256 vectors including its HTTP fallback, and the local MapLibre worker processing the actual land GeoJSON. `python3 scripts/check-static.py` passes without third-party Python modules.
+Twenty-three native browser test groups passed in Chromium: calendar vectors, uncertainty, full URL roundtrip and invalid routes, all source resolvers, dateline windows, fixture/release separation, negative semantic cases, polygon topology, deterministic browser export and payload hashes, ZIP roundtrip, empty draft/release behavior, HTTP catalogue queries, incoming edges, territorial gaps, tamper detection, SHA-256 vectors including its HTTP fallback, and the local MapLibre worker processing the actual land GeoJSON. `python3 scripts/check-static.py` passes without third-party Python modules.
 
-The authoring UI imported 61 source files for the content repo’s 48-record first-circumnavigation sample and exported a draft catalogue from source commit 3814f2f7d39f4c646e301bef4a3a2d5b15fb98ad with zero errors/warnings. The two new browser test groups cover category scopes/kinds, interval defaults, original date labels and navigation roundtrips. This exercised the real browser workflow, not a substitute compiler. See `tests/browser/RESULTS.md` for rendering/navigation observations and limitations.
+The authoring UI imported the committed content sources (214 selected files) for three historical chapters, validated 157 records and exported draft-3c169a9523d4d5edda2a from source commit 6ccc3ec0ab50db7446b89ad72dc6e8f794626be3 with zero errors/warnings. The pinned content toolkit matches the engine authoring implementation. The three new browser groups cover drawer focus/dismissal and modified links, bounded/persistent timeline height, and timeline windows on chapter changes. This exercised the real browser workflow, not a substitute compiler. See `tests/browser/RESULTS.md` for rendering/navigation observations and limitations.
 
 ## Remaining acceptance work
 
@@ -34,6 +36,6 @@ The authoring UI imported 61 source files for the content repo’s 48-record fir
 - WebGL2 MapLibre/Three.js checks, models anchored on the globe, horizon/polar/dateline behavior and measured 200 m/CSS-pixel zoom.
 - Extended public GitHub Raw media and large-payload hosting tests; the small historical sample does not establish large-payload compatibility.
 - Full 18-case browser acceptance, narrow-screen/touch checks, focus/scroll restoration, complete filter UI, chapter steps, interpretation selection UI and timeline range gestures.
-- Independent historical review of the first research draft, a second reuse chapter, and a reviewed historical release. No synthetic fixture enters the content repository.
+- Independent historical review of all three research drafts and a reviewed historical release. Shared package reuse is now exercised by the maritime chapters; no synthetic fixture enters the content repository.
 
-Close these M0/M1 gaps before broadening historical coverage or adding MariaDB.
+The two additional voyage drafts and panel controls were explicitly requested to evaluate navigation with multiple chapters. The remaining M0/M1 gaps are still open; this addition does not establish general historical-release or large-library readiness.
