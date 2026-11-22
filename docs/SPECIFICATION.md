@@ -22,6 +22,12 @@ Der normale Einstieg ist nun eine durchsuchbare Kapitelübersicht mit regionalen
 
 Kapitel erhalten explizite `recordIds` sowie optionale `discovery`-Metadaten. Paketbesitz und Kapitelzugehörigkeit sind verschiedene Dinge. Der Entwurfsvertrag und der Compiler erzeugen einen gesonderten Discovery-Index. Details, URL-Kompatibilität, tatsächliche Messungen und Skalierungsgrenzen: [Entscheidung 0003](decisions/0003-chapter-discovery.md).
 
+## Verbindliche Aktualisierung · Wanderungskarten · 22. November 2026
+
+Entwicklungsstand dev.8 ergänzt explizite Richtungen für Bewegungsgeometrien, alternative Wanderungsereignisse, datierte Land-/Eis-Schnappschüsse und Kapitelstationen. Fundbelege bleiben unabhängig von gewählten Wegvarianten. Ein Modellzeitpunkt oder günstiges Umweltfenster MUSS als solches erklärt werden; daraus entsteht keine belegte Reisedauer. Es gibt keine automatische Küsten- oder Bewegungsinterpolation.
+
+Die Capability `migration-maps` schützt ältere Viewer vor unbekannten Darstellungen. `spatial.direction`, die Rollen `land-reconstruction`/`ice-reconstruction`, `interpretationChoices.recordId` sowie lokalisierte Schritte mit optionalem Bildverweis sind in [Entscheidung 0006](decisions/0006-migration-maps.md) verbindlich beschrieben. Kartenstände benötigen eine zitierte `extent-of`-Aussage mit Zeitpunkt. Variantenvergleich und Kapitelstation werden im URL-Zustand erhalten; eine ausdrücklich leere Variantenauswahl bleibt auch nach Neuladen ein Vergleich.
+
 ## 1. Produkt und Erkenntnismodell
 
 Nach der Kapitelwahl zeigt der Atlas einen drehbaren Globus, eine Zeitsteuerung und die ausgewählten Geschichtsräume. Besucher können von einem Ort zu einem Herrschaftsbereich, von dort zu einer Handelsbeziehung, einer Person, einer Sprache oder einem Gegenstand wechseln. Karte, Zeitleiste, Beziehungsnetz und Detailansicht zeigen unterschiedliche Ansichten derselben Datensätze.
@@ -272,7 +278,7 @@ Eine Bewegung speichert ihre belegten Stationen in fachlicher Reihenfolge, jewei
 
 ### 4.5 Alternative Deutungen
 
-Ein `interpretation`-Datensatz gruppiert mindestens zwei Aussage-IDs, nennt die fachliche Frage und erklärt die Unterschiede. Die Aussagen behalten ihre eigenen Quellen, Zeiten und Geometrien. Ein Kapitel kann bewusst eine Variante auswählen, muss diese Auswahl erklären. Ohne Auswahl zeigt die Karte einen Hinweis und ermöglicht Vergleich; sie entscheidet nicht nach Dateireihenfolge.
+Ein `interpretation`-Datensatz gruppiert mindestens zwei Aussage-IDs oder ausdrücklich als Hypothesen beschriebene Wanderungsereignisse, nennt die fachliche Frage und erklärt die Unterschiede. Die Aussagen behalten ihre eigenen Quellen, Zeiten und Geometrien. Ein Kapitel kann bewusst eine Variante auswählen, muss diese Auswahl erklären. Ohne Auswahl zeigt die Karte einen Hinweis und ermöglicht Vergleich; sie entscheidet nicht nach Dateireihenfolge.
 
 Gleichzeitige Kontrolle und Anspruch sind keine automatisch widersprüchlichen Alternativen. Ebenen dürfen legitim überlappen. Auch zwei Aussagen mit verschiedenen räumlichen Auflösungen sind nicht schon deswegen Konkurrenzvarianten.
 
