@@ -64,3 +64,21 @@ The development preview served the actual Vite production build under `/qa/bundl
 WebGL2 is disabled in this browser. The MapLibre GPU renderer and Three.js WebGL renderer therefore remain **unverified**; successful SVG fallback is not evidence that their GPU paths pass. No claim is made for textured SVG models.
 
 Still outstanding: all 18 navigation cases as a complete suite, clean-profile/native new-tab behavior, touch/narrow screens, focus and scroll restoration, gesture/history grouping, full filter/range UI, globe scale/horizon/dateline checks, public GitHub Raw hosting and a network-request allowlist audit. No real historical material was reviewed in this technical test.
+
+## Chapter explorer · 2026-11-22
+
+Native browser suite: 31/31 groups passed in Chromium 156 on Linux. Added coverage includes explicit chapter membership, legacy outgoing-reference fallback, accent-insensitive multiword discovery, intersected facets/date filters, bounded pagination, complete multi-selection URL roundtrips, invalid selection URLs, inverse membership export, missing-member rejection, geometry-specific highlight layers, 10k discovery records and repeated browser Back/new navigation/Back/Forward. The router history test caught the need to update the navigation deduplication URL after programmatic commits.
+
+Browser authoring imported 216 files from committed historical source 2ee19d3f3701af9b401febf2824adbd4d886e706. Export: draft-d758afe3685c558ed816, 158 records, 0 errors/warnings, 55 active payloads verified against catalogue size and SHA-256. Catalogue SHA-256: 31982e34617b3950a337afc1fcbc77e245118b2c2258ac6a58c9a16502c665a3. Prior immutable payloads are retained.
+
+Observed through the real UI against this export:
+- Fresh entry shows the explorer, three real chapter cards, two available period/calendar groups, region/topic/date controls and a disabled open action until a chapter is selected.
+- `galapagos` finds Darwin while preserving the selected set.
+- Darwin alone: directory counts 3 people, 20 events, 19 places; the people list contains Darwin, FitzRoy and Covington with their chapter badges.
+- All three chapters: chronological sidebar (1492, 1519, 1831), 11 people and 34 unique places. Rio is one list entry carrying both circumnavigation and Darwin chapter badges.
+- Browser Back/Forward between the places list and Rio restores the three-chapter URL scope and the object.
+- Selecting San Cristóbal and its map link gives a clearly visible orange point with a white halo, and the URL retains the selected event and camera.
+
+Rendering observed here uses the SVG fallback because this environment lacks WebGL2. MapLibre highlight layer structure is covered automatically; GPU appearance remains to be checked in a WebGL2 browser. Synthetic 10k/100k benchmark measurements and their limits are in decision 0003; they do not certify network transfer or 100k-chapter atlas rendering.
+
+Additional UI checks: a fresh tab opened the Rio deep link directly with all three chapters selected; switching the explorer to English retained all three selections. The 390px layout places filters behind an explicit disclosure so search and chapters remain reachable.

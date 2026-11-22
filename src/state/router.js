@@ -5,6 +5,8 @@ export class Router {
     onChange;
     defaults;
     constructor(defaults, onChange, onError, chapters = []) {
+        this.abort = new AbortController();
+        const options = {signal:this.abort.signal};
         this.defaults = defaults;
         this.state = defaults;
         this.onChange = onChange;
@@ -20,11 +22,11 @@ export class Router {
         catch (e) {
             onError(e);
         } };
-        let last = '';
-        const navigate = () => { if (location.href === last)
-            return; last = location.href; restore(); };
-        addEventListener('popstate', navigate);
-        addEventListener('hashchange', navigate);
+        this.lastURL = '';
+        const navigate = () => { if (location.href === this.lastURL)
+            return; restore(); this.lastURL = location.href; };
+        addEventListener('popstate', navigate, options);
+        addEventListener('hashchange', navigate, options);
         document.addEventListener('click', e => {
             if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.defaultPrevented)
                 return;
@@ -41,8 +43,9 @@ export class Router {
             catch (err) {
                 onError(err);
             }
-        });
+        }, options);
         restore();
+        this.lastURL = location.href;
     }
     commit(state) {
         const normalized = normalizeState(state), hash = encodeState(normalized);
@@ -50,9 +53,11 @@ export class Router {
         if (location.hash === hash)
             return;
         history.pushState(null, '', hash);
+        this.lastURL = location.href;
         this.state = normalized;
         this.onChange(normalized, []);
     }
+    destroy() { this.abort.abort(); }
     commitPreview() { if (this.preview)
         this.commit(this.preview); }
 }

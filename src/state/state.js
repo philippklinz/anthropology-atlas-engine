@@ -1,14 +1,16 @@
 import { epochDay, yearRange, normalizeTime, calendarDate } from '../domain/time.js';
-export const views = ['map', 'chapter', 'entity', 'assertion', 'event', 'source', 'network', 'model', 'search', 'about', 'licenses'];
+export const views = ['explore', 'map', 'chapter', 'entity', 'assertion', 'event', 'source', 'network', 'model', 'search', 'about', 'licenses'];
 export const uniq = (a) => [...new Set(a)].sort();
 export function defaultState(chapter, sourceKey, release, language = 'de') {
     const t = normalizeTime(chapter.initialState.time), year = t.possible ? calendarDate(t.possible.from).year : 1;
-    return { version: 1, view: chapter.id ? 'chapter' : 'map', id: chapter.id || undefined, language: language === 'en' ? 'en' : 'de', sourceKey, release, chapter: chapter.id, time: chapter.initialState.time.kind === 'interval' && t.possible ? t.possible : { year }, camera: chapter.initialState.camera, layers: uniq([...chapter.initialState.layers, 'located-at', 'events']), types: [], packages: [], mode: 'overlap', includeUndated: false, interpretations: Object.fromEntries((chapter.interpretationChoices ?? []).map(c => [c.interpretationId, c.assertionId])), query: '', searchScope: 'selection', expanded: [], selection: [], detail: 'overview' };
+    return { version: 1, view: chapter.id ? 'chapter' : 'map', id: chapter.id || undefined, language: language === 'en' ? 'en' : 'de', sourceKey, release, chapter: chapter.id, chapters: chapter.id ? [chapter.id] : [], browse: {}, time: chapter.initialState.time.kind === 'interval' && t.possible ? t.possible : { year }, camera: chapter.initialState.camera, layers: uniq([...chapter.initialState.layers, 'located-at', 'events']), types: [], packages: [], mode: 'overlap', includeUndated: false, interpretations: Object.fromEntries((chapter.interpretationChoices ?? []).map(c => [c.interpretationId, c.assertionId])), query: '', searchScope: 'selection', expanded: [], selection: [], detail: 'overview' };
 }
-export function filters(s) { return { range: 'year' in s.time ? yearRange(s.time.year) : s.time, mode: s.mode, includeUndated: s.includeUndated, layers: s.layers, types: s.types, packages: s.packages, interpretations: s.interpretations }; }
-export function searchFilters(s) { return { ...filters(s), allTime: s.searchScope === 'catalog' }; }
+export function filters(s) { return { chapters: s.chapters, range: 'year' in s.time ? yearRange(s.time.year) : s.time, mode: s.mode, includeUndated: s.includeUndated, layers: s.layers, types: s.types, packages: s.packages, interpretations: s.interpretations }; }
+export function searchFilters(s) { return { ...filters(s), allTime: ['chapters', 'catalog'].includes(s.searchScope) }; }
 export function normalizeState(s) {
     const r = structuredClone(s);
+    r.chapters = uniq(r.chapters ?? (r.chapter ? [r.chapter] : []));
+    r.browse = Object.fromEntries(Object.entries(r.browse ?? {}).filter(([,v])=>v !== '' && v !== undefined && v !== 0));
     r.layers = uniq(r.layers);
     r.types = uniq(r.types);
     r.packages = uniq(r.packages);
@@ -31,6 +33,8 @@ export function encodeState(input) {
     q.set('source', s.sourceKey);
     q.set('release', s.release);
     q.set('chapter', s.chapter);
+    q.set('chapters',s.chapters.join(','));
+    for (const [key,value] of Object.entries(s.browse)) q.set('browse-'+key,String(value));
     if ('year' in s.time)
         q.set('at', String(s.time.year));
     else
@@ -45,7 +49,7 @@ export function encodeState(input) {
         q.set('step', s.step);
     if (s.query)
         q.set('q', s.query);
-    if (s.searchScope === 'catalog') q.set('scope', 'catalog');
+    if (s.searchScope !== 'selection') q.set('scope', s.searchScope);
     if (Object.keys(s.interpretations).length)
         q.set('interpretations', JSON.stringify(s.interpretations));
     if (s.spatialFilter)
@@ -79,6 +83,18 @@ export function decodeState(hash, defaults, chapters = []) {
         s.language = q.get('lang');
     }
     s.chapter = q.get('chapter') ?? (s.view === 'chapter' ? s.id : s.chapter);
+    s.chapters = q.has('chapters') ? q.get('chapters').split(',').filter(Boolean) : (s.chapter ? [s.chapter] : []);
+    if (chapters.length && s.chapters.some(id => !chapters.some(c=>c.id===id))) throw new Error('URL_CHAPTER: selected chapter unavailable');
+    if (s.view !== 'explore' && s.chapter && !s.chapters.includes(s.chapter)) throw new Error('URL_CHAPTER: focused chapter is outside the selection');
+    s.browse = {};
+    for (const key of ['query','period','region','topic','from','to','page']) if (q.has('browse-'+key)) {
+        const value = q.get('browse-'+key);
+        if (['from','to','page'].includes(key)) {
+            if (!/^-?\d+$/.test(value) || !Number.isSafeInteger(Number(value)) || (key==='page' && Number(value)<0) || (key!=='page' && (Number(value)<-10000 || Number(value)>2100))) throw new Error('URL_BROWSE: invalid number');
+            s.browse[key] = Number(value);
+        } else s.browse[key] = value;
+    }
+    if (s.browse.from !== undefined && s.browse.to !== undefined && s.browse.from > s.browse.to) throw new Error('URL_BROWSE: inverted range');
     s.step = q.get('step') ?? undefined;
     if (s.view === 'chapter' && s.chapter !== s.id)
         throw new Error('URL_TARGET: conflicting chapter');
@@ -114,7 +130,7 @@ export function decodeState(hash, defaults, chapters = []) {
     }
     s.includeUndated = q.get('undated') === '1';
     s.query = q.get('q') ?? '';
-    if (q.has('scope') && !['catalog', 'selection'].includes(q.get('scope'))) throw new Error('URL_FILTER: invalid search scope');
+    if (q.has('scope') && !['chapters', 'catalog', 'selection'].includes(q.get('scope'))) throw new Error('URL_FILTER: invalid search scope');
     s.searchScope = q.get('scope') ?? 'selection';
     s.detail = q.get('detail') ?? 'overview';
     if (q.has('interpretations')) {
@@ -133,6 +149,6 @@ export function decodeState(hash, defaults, chapters = []) {
 }
 export function target(s, view, id) {
     // A directory category restricts its result list, not the selected object's relationships.
-    const exitDirectory = s.view === 'search' && s.searchScope === 'catalog' && view !== 'search';
-    return { ...s, ...(exitDirectory ? { types: [], searchScope: 'selection' } : {}), view, id };
+    const exitDirectory = s.view === 'search' && ['catalog', 'chapters'].includes(s.searchScope) && view !== 'search';
+    return { ...s, ...(exitDirectory ? { types: [], searchScope: 'selection' } : {}), view, id, ...(view === 'chapter' && id ? {chapter:id} : {}) };
 }

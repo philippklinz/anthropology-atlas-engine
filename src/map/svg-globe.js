@@ -106,6 +106,14 @@ export class SvgGlobe {
             path.pointRadius(selected ? 8 : 5);
             add(path(f), area ? '#009e9844' : point ? '#006f6b' : 'none', selected ? '#202325' : point ? 'white' : area ? '#00766d' : '#9e613f', selected ? 3 : point ? 2 : 1.8, id, !area && !point);
         }
+        for (const f of this.features.filter(f=>String(f.properties?.recordId)===this.selected)) {
+            const point=f.geometry.type.includes('Point'), area=f.geometry.type.includes('Polygon');
+            const id=String(f.properties.recordId);
+            path.pointRadius(13);
+            add(path(f),point?'#fff4db':'none','#ffffff',point?4:8,id);
+            path.pointRadius(9);
+            add(path(f),point?'#d67a2c':area?'#d67a2c44':'none','#87451c',point?2:4,id);
+        }
         this.svg.replaceChildren(fragment);
     }
 }

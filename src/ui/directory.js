@@ -1,5 +1,5 @@
 import { matchesTypes } from '../query/query.js';
-// Chapters are curated reading paths. The directory indexes the whole catalogue.
+// Directory scope follows the selected chapters, independent of map time.
 export const categories = [
     { key: 'people', types: ['person'], labels: ['Personen', 'People'] },
     { key: 'communities', types: ['community'], labels: ['Völker & Gemeinschaften', 'Peoples & communities'] },
@@ -26,5 +26,5 @@ export function activeCategory(types) {
     return categories.find(c => c.types.length === types.length && c.types.every(t => types.includes(t)));
 }
 export function directoryState(state, types = directoryTypes) {
-    return { ...state, view: 'search', id: undefined, step: undefined, query: '', types, packages: [], spatialFilter: undefined, searchScope: 'catalog' };
+    return { ...state, view: 'search', id: undefined, step: undefined, query: '', types, packages: [], spatialFilter: undefined, searchScope: 'chapters' };
 }

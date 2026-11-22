@@ -71,5 +71,51 @@
       "altitudeMeters": 0,
       "symbolScale": 1000
     }
-  ]
+  ],
+  "recordIds": [
+    "artifact:demo-object",
+    "assertion:demo-control-a",
+    "assertion:demo-control-alternative",
+    "assertion:demo-control-b",
+    "assertion:demo-family-membership",
+    "assertion:demo-language-descent",
+    "assertion:demo-language-use",
+    "assertion:demo-port-a-location",
+    "assertion:demo-port-b-location",
+    "assertion:demo-script-descent",
+    "assertion:demo-trade",
+    "assertion:demo-writing",
+    "asset:demo-symbol",
+    "community:demo-merchants",
+    "event:demo-journey",
+    "geometry:demo-area-a",
+    "geometry:demo-area-alternative",
+    "geometry:demo-area-b",
+    "geometry:demo-connection",
+    "geometry:demo-dateline",
+    "geometry:demo-port-a",
+    "geometry:demo-port-b",
+    "interpretation:demo-extent",
+    "language-family:demo-family",
+    "language:demo-language",
+    "language:demo-parent-language",
+    "person:demo-traveller",
+    "place:demo-port-a",
+    "place:demo-port-b",
+    "polity:demo-realm",
+    "region:demo-estuary",
+    "script:demo-parent-script",
+    "script:demo-script",
+    "source:demo-notes",
+    "technology:demo-technique"
+  ],
+  "discovery": {
+    "summary": {
+      "de": "Ausdrücklich synthetisches Testkapitel.",
+      "en": "Explicitly synthetic test chapter."
+    },
+    "periods": [],
+    "regions": [],
+    "topics": []
+  }
 }

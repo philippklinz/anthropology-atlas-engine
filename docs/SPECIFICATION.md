@@ -16,9 +16,15 @@ Die jüngere Projektentscheidung ersetzt alle älteren Aussagen dieses Dokuments
 
 Die aktuelle Dateistruktur liegt direkt im Repo-Wurzelverzeichnis: `index.html`, `authoring.html`, `src/`, `vendor/`, `fonts/`, `basemap/`, `licenses/`, `demo/content/`. `public/` und `dist/` entfallen. Browserbasierte Inhaltsprüfung und ZIP-Export ersetzen die Node-CLI. Details: [Architekturentscheidung 0002](decisions/0002-native-browser-distribution.md) und [Konfiguration](CONFIGURATION.md). Die fachlichen Regeln und Abnahmeziele bleiben gültig.
 
+## Verbindliche Aktualisierung · Kapitelauswahl · 22. November 2026
+
+Der normale Einstieg ist nun eine durchsuchbare Kapitelübersicht mit regionalen Epochen/Zeiträumen, Regionen, Themen und Mehrfachauswahl. Direkte Atlaslinks überspringen diesen Einstieg. `chapters` bezeichnet die ausgewählte Menge, `chapter` den Fokus. Menü, Objektlisten und Zähler, Karte, Netz und Zeitleiste beziehen sich auf diese Menge. Die Objektübersicht ist zusätzlich unabhängig von der Kartenzeit; mehrfach zugeordnete Objekte erscheinen einmal mit allen passenden Kapitelhinweisen. Ausgewählte Kapitel werden chronologisch sortiert.
+
+Kapitel erhalten explizite `recordIds` sowie optionale `discovery`-Metadaten. Paketbesitz und Kapitelzugehörigkeit sind verschiedene Dinge. Der Entwurfsvertrag und der Compiler erzeugen einen gesonderten Discovery-Index. Details, URL-Kompatibilität, tatsächliche Messungen und Skalierungsgrenzen: [Entscheidung 0003](decisions/0003-chapter-discovery.md).
+
 ## 1. Produkt und Erkenntnismodell
 
-Die erste Ansicht zeigt einen drehbaren Globus, eine Zeitsteuerung und einen verständlichen Einstieg in einen ausgewählten Geschichtsraum. Besucher können von einem Ort zu einem Herrschaftsbereich, von dort zu einer Handelsbeziehung, einer Person, einer Sprache oder einem Gegenstand wechseln. Karte, Zeitleiste, Beziehungsnetz und Detailansicht zeigen unterschiedliche Ansichten derselben Datensätze.
+Nach der Kapitelwahl zeigt der Atlas einen drehbaren Globus, eine Zeitsteuerung und die ausgewählten Geschichtsräume. Besucher können von einem Ort zu einem Herrschaftsbereich, von dort zu einer Handelsbeziehung, einer Person, einer Sprache oder einem Gegenstand wechseln. Karte, Zeitleiste, Beziehungsnetz und Detailansicht zeigen unterschiedliche Ansichten derselben Datensätze.
 
 Historische Räume dürfen sich geografisch und zeitlich überlagern. Ein Mensch gehört nicht genau einem Land, eine Sprache nicht genau einem Volk und eine Organisation nicht genau einem Reich. Moderne Länder sind eine mögliche Orientierungsebene. Sie bilden keine verbindliche Ablageordnung für den gesamten Datenbestand.
 

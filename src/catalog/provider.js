@@ -2,6 +2,7 @@ import { Ajv2020, addFormats } from '../../vendor/validation/validation.js';
 import configSchema from '../../schemas/0.1.0/config.schema.json' with { type: 'json' };
 import catalogSchema from '../../schemas/0.1.0/catalog.schema.json' with { type: 'json' };
 import recordSchema from '../../schemas/0.1.0/record.schema.json' with { type: 'json' };
+import { legacyMembers } from '../query/chapters.js';
 import { contentURL } from '../domain/paths.js';
 import { bboxOverlap, rankSearch, temporalMatch, matchesTypes } from '../query/query.js';
 const ajv = new Ajv2020({ strict: false });
@@ -48,7 +49,10 @@ export class StaticProvider {
     edges = {};
     cache = new Map();
     records = new Map();
-    static async open(value, base) {
+    discovery = [];
+    memberships = new Map();
+    atlasReady;
+    static async open(value, base, {catalogOnly = false} = {}) {
         const p = new StaticProvider(), resolved = resolveConfig(value, base);
         p.config = resolved.config;
         p.catalogURL = resolved.catalogURL;
@@ -68,12 +72,32 @@ export class StaticProvider {
             throw new Error('CAPABILITY_UNSUPPORTED');
         p.sourceKey = p.config.instanceId + '-' + (await digest(new TextEncoder().encode(p.catalogURL.href))).slice(0, 12);
         const e = p.catalog.entrypoints;
-        p.index = await p.json(e.recordIndex);
-        if (!p.index.records || !Array.isArray(p.index.chapters))
-            throw new Error('INDEX_RECORDS: invalid record index');
-        [p.times, p.spatial, p.edges] = await Promise.all([p.items(e.time), p.items(e.spatial), p.items(e.relations)]);
+        if (e.discovery) {
+            p.discovery = await p.items(e.discovery);
+            p.index = {records:{}, chapters:p.discovery};
+        }
+        if (!catalogOnly || !e.discovery) await p.ensureAtlas();
+        if (!e.discovery) p.discovery = p.index.chapters;
         return p;
     }
+    async ensureAtlas() {
+        if (!this.atlasReady) this.atlasReady = (async () => {
+            const e = this.catalog.entrypoints;
+            this.index = await this.json(e.recordIndex);
+            if (!this.index.records || !Array.isArray(this.index.chapters)) throw new Error('INDEX_RECORDS: invalid record index');
+            [this.times,this.spatial,this.edges] = await Promise.all([this.items(e.time),this.items(e.spatial),this.items(e.relations)]);
+            for (const ch of this.index.chapters) {
+                const ids = ch.recordIds ? [ch.id,...ch.recordIds] : await legacyMembers(ch,id=>this.getRecord(id));
+                this.memberships.set(ch.id,new Set(ids));
+            }
+        })().catch(error=>{this.atlasReady=undefined;throw error;});
+        return this.atlasReady;
+    }
+    belongs(id, chapters) {
+        return chapters === undefined || chapters.some(ch => this.memberships.get(ch)?.has(id));
+    }
+    chaptersFor(id, chapters) { return this.index.chapters.filter(ch => (!chapters || chapters.includes(ch.id)) && this.memberships.get(ch.id)?.has(id)); }
+    scopedRecords(chapters) { return Object.fromEntries(Object.entries(this.index.records).filter(([id])=>this.belongs(id,chapters))); }
     async bytes(path) {
         const f = this.catalog.files.find(f => f.path === path);
         if (!f)
@@ -111,17 +135,17 @@ export class StaticProvider {
         const meta = this.index.records[id];
         if (!meta)
             return false;
-        return (!f.packages.length || f.packages.includes(meta.packageId)) && matchesTypes(meta, f.types) && temporalMatch(id, this.times, f);
+        return this.belongs(id, f.chapters) && (!f.packages.length || f.packages.includes(meta.packageId)) && matchesTypes(meta, f.types) && temporalMatch(id, this.times, f);
     }
     page(items, cursor) { const offset = cursor ? Number(cursor) : 0; if (!Number.isInteger(offset) || offset < 0)
-        throw new Error('CURSOR_INVALID'); return { dataReleaseId: this.catalog.dataReleaseId, items: items.slice(offset, offset + 60), ...(items.length > offset + 60 ? { nextCursor: String(offset + 60) } : {}) }; }
+        throw new Error('CURSOR_INVALID'); return { dataReleaseId: this.catalog.dataReleaseId, total: items.length, items: items.slice(offset, offset + 60), ...(items.length > offset + 60 ? { nextCursor: String(offset + 60) } : {}) }; }
     async search(query, f, language, cursor) {
         const path = this.catalog.entrypoints.search[language] ?? Object.values(this.catalog.entrypoints.search)[0];
         const docs = await this.items(path);
         return this.page(rankSearch(docs.filter(d => this.include(d.id, f)), query, language), cursor);
     }
     async relations(id, f, cursor) {
-        const edges = (this.edges[id] ?? []).filter(r => this.include(r.id, f));
+        const edges = (this.edges[id] ?? []).filter(r => this.include(r.id, f) && this.belongs(r.from,f.chapters) && this.belongs(r.to,f.chapters));
         const meta = this.index.records[id];
         // Places and waypoints are explicit event references, not new historical assertions.
         // Older catalogues indexed participants only, so derive these edges at query time.
@@ -133,7 +157,7 @@ export class StaticProvider {
             const locations = new Map((event.placeIds ?? []).map(place => [place, 'event-location']));
             for (const waypoint of event.waypoints ?? []) if (waypoint.placeId && !locations.has(waypoint.placeId)) locations.set(waypoint.placeId, 'waypoint');
             for (const [place, predicate] of locations) {
-                if (id !== eventId && id !== place) continue;
+                if ((id !== eventId && id !== place) || !this.belongs(place,f.chapters)) continue;
                 if (!edges.some(e => e.id === eventId && e.from === eventId && e.to === place && e.predicate === predicate))
                     edges.push({ id: eventId, from: eventId, to: place, predicate, symmetric: false, event: true });
             }

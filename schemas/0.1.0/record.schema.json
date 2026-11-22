@@ -1995,6 +1995,60 @@
             "$ref": "#/$defs/placement"
           },
           "minItems": 1
+        },
+        "recordIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[a-z]+(?:-[a-z]+)*:[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "discovery": {
+          "type": "object",
+          "properties": {
+            "summary": {
+              "type": "object",
+              "minProperties": 1,
+              "propertyNames": {
+                "pattern": "^[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)*$"
+              },
+              "additionalProperties": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "periods": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/discoveryFacet"
+              },
+              "maxItems": 30
+            },
+            "regions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/discoveryFacet"
+              },
+              "maxItems": 30
+            },
+            "topics": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/discoveryFacet"
+              },
+              "maxItems": 30
+            }
+          },
+          "required": [
+            "summary",
+            "periods",
+            "regions",
+            "topics"
+          ],
+          "additionalProperties": false
         }
       },
       "required": [
@@ -2123,6 +2177,42 @@
         "recordIds",
         "entryChapterIds",
         "requiredCapabilities"
+      ],
+      "additionalProperties": false
+    },
+    "discoveryFacet": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "labels": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)*$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "description": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)*$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "id",
+        "labels"
       ],
       "additionalProperties": false
     }
