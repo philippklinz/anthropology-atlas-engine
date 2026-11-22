@@ -1,5 +1,7 @@
 # 0001 · First executable foundation
 
+Toolchain and pinned-only provider decisions below are superseded by [0002](0002-native-browser-distribution.md).
+
 2026-11-22 · App 0.1.0-dev.1 · schema/index contracts remain draft.
 
 This is the first integrated development slice, not the completed 0.1.0 release. M0 and M1 remain open until the acceptance gaps in `docs/STATUS.md` are closed.

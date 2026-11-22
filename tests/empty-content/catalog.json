@@ -1,0 +1,68 @@
+{
+  "catalogVersion": "1",
+  "schemaVersion": "0.1.0",
+  "indexVersion": "1",
+  "dataReleaseId": "draft-de20d532e248648d36bf",
+  "sourceRevision": "a88bd23bd844bc488eaf262dab80e3e4810e1b16",
+  "compilerVersion": "0.1.0-dev.2",
+  "packages": [],
+  "languages": [
+    "de"
+  ],
+  "requiredCapabilities": [],
+  "files": [
+    {
+      "path": "files/licenses-7c96bb3d373e54c8240daf58.json",
+      "role": "licenses",
+      "bytes": 77,
+      "mediaType": "application/json",
+      "sha256": "7c96bb3d373e54c8240daf58c9ef49f906ee3869736479657bc5d9b8980a4509"
+    },
+    {
+      "path": "files/record-index-3867abb80c238529f94fe719.json",
+      "role": "record-index",
+      "bytes": 93,
+      "mediaType": "application/json",
+      "sha256": "3867abb80c238529f94fe7195d223e3fe8dbc194dcf8b8dff738d81504c596e1"
+    },
+    {
+      "path": "files/relations-d53111e6634a2bae0dc36424.json",
+      "role": "relations",
+      "bytes": 77,
+      "mediaType": "application/json",
+      "sha256": "d53111e6634a2bae0dc364247deec7fb5424be981f4cf857d03b8dfe92de9620"
+    },
+    {
+      "path": "files/search-de-7c96bb3d373e54c8240daf58.json",
+      "role": "search",
+      "bytes": 77,
+      "mediaType": "application/json",
+      "sha256": "7c96bb3d373e54c8240daf58c9ef49f906ee3869736479657bc5d9b8980a4509"
+    },
+    {
+      "path": "files/spatial-7c96bb3d373e54c8240daf58.json",
+      "role": "spatial",
+      "bytes": 77,
+      "mediaType": "application/json",
+      "sha256": "7c96bb3d373e54c8240daf58c9ef49f906ee3869736479657bc5d9b8980a4509"
+    },
+    {
+      "path": "files/time-d53111e6634a2bae0dc36424.json",
+      "role": "time",
+      "bytes": 77,
+      "mediaType": "application/json",
+      "sha256": "d53111e6634a2bae0dc364247deec7fb5424be981f4cf857d03b8dfe92de9620"
+    }
+  ],
+  "entrypoints": {
+    "recordIndex": "files/record-index-3867abb80c238529f94fe719.json",
+    "search": {
+      "de": "files/search-de-7c96bb3d373e54c8240daf58.json"
+    },
+    "time": "files/time-d53111e6634a2bae0dc36424.json",
+    "relations": "files/relations-d53111e6634a2bae0dc36424.json",
+    "spatial": "files/spatial-7c96bb3d373e54c8240daf58.json",
+    "defaultChapterId": null
+  },
+  "licenseInventory": "files/licenses-7c96bb3d373e54c8240daf58.json"
+}

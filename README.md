@@ -1,50 +1,31 @@
-# Anthropology Atlas · Engine
+# Anthropology Atlas Engine
 
-An open atlas of places, people, languages, institutions and their connections through time. This repository holds the software, data contract and explicitly synthetic fixtures. Historical research belongs in [anthropology-atlas-content](https://github.com/philippklinz/anthropology-atlas-content).
+An open, static atlas of people, places and connections through time. Development version 0.1.0-dev.2; the supplied demo is explicitly fictional.
 
-**Version 0.1.0-dev.1: first working development slice.** Globe, timeline, relationship network, source details, DE/EN UI, search and GLB viewer. This is a technical demo, not a historical release. Read [status](docs/STATUS.md) and [specification](docs/SPECIFICATION.md) before extending it.
+## Run and configure
 
-## Run locally
+Clone or copy this repository into your web server and open its URL. **No Node.js, npm, package installation or application build.** The application source is editable browser JavaScript in `src/`; all libraries, workers, fonts and the physical basemap are checked in.
 
-Toolchain profile: Linux x86_64 glibc, Node.js 24.22.3, npm 11.19.1. Dependencies are included as verified npm archives. The normal install uses no package server. Large package archives are split into ordered parts; the installer rejoins them and verifies the complete upstream archive before installation.
+Edit **[atlas.config.json](atlas.config.json)** to select the content installation. Default: `philippklinz/anthropology-atlas-content`, branch `main`, `published/catalog.json`. Another repository, branch, own host or local clone served by HTTP works through the same catalogue format. See [configuration examples and Pages instructions](docs/CONFIGURATION.md).
 
-```bash
-node tools/install-offline.mjs
-npm test
-npm run demo
-npm run dev
-```
+The default content repo starts empty. The engine does not silently replace it with fictitious history. Open **`?demo=1`** for the separately labelled technical demo. Use an HTTP(S) URL, not `file://`.
 
-Open the printed local HTTP URL, not a `file://` path. The demo contains two fictional chapters and 39 records, including an intentional territorial gap in 1300–1304.
+## Content tools and tests
 
-## Build and deploy
+Open **[authoring.html](authoring.html)**, choose a content folder or ZIP, and validate/export it in the browser. Files stay local to that browser. Exported catalogue files belong in the content repo's `published/` directory. The `draft`, `fixture` and `release` profiles preserve the distinction between editorial drafts, synthetic tests and historical publication.
 
-```bash
-npm run typecheck
-npm run demo
-npm run build
-```
+Open **[tests/index.html](tests/index.html)** for browser checks. Optional CI/file-integrity check: `python3 scripts/check-static.py` (standard library only). Python is not required to run, edit or publish the atlas or its content tools.
 
-Serve the contents of `dist/` from any static host, including a project subdirectory. Hash routes need no rewrite. The manual **Publish synthetic demo to Pages** workflow is provided: enable GitHub Pages with Actions as its source, then run the workflow when ready. Development does not change repository visibility or automatically publish a site.
+## Repository guide
 
-For your own content, replace `public/atlas.config.json` before building or `dist/atlas.config.json` afterwards. `npm run demo` intentionally replaces the development config. The configuration schema defines `bundled`, `http` and pinned public `github-raw` profiles. Another content origin needs CORS. Payload hashes and content revision are checked. No browser token or MariaDB is required.
+- `src/`: directly executable application modules and styles.
+- `vendor/`: fixed browser libraries; versions, sources, hashes in `vendor/manifest.json`.
+- `fonts/`, `basemap/`, `licenses/`: local assets, provenance and legal notices.
+- `schemas/0.1.0/`: draft data contract and controlled vocabulary.
+- `tools/`, `authoring.html`: standalone browser validator/compiler.
+- `fixtures/`, `demo/content/`: synthetic test sources and ready-to-use demo catalogue.
+- `docs/`: product specification, configuration and implementation status.
 
-## Content tools
+[Specification](docs/SPECIFICATION.md) · [Status and limitations](docs/STATUS.md) · [Architecture decision](docs/decisions/0002-native-browser-distribution.md)
 
-```bash
-node tools/cli.ts validate /path/to/content --profile draft
-node tools/cli.ts build /path/to/content --profile release --out build/content
-npm run authoring:build
-```
-
-`build/authoring/` is standalone: copy it to `tooling/` in the content repo and use `node tooling/tools/cli.js validate . --profile draft`. It needs Node 24, but no engine checkout or npm install. Validation distinguishes `draft`, `fixture` and `release`; it does not establish historical truth.
-
-## Rendering
-
-MapLibre GL JS supplies the main globe; vis supplies time and connections; Three.js loads embedded GLB models. d3-geo provides an SVG globe without WebGL2. Three.js has a limited SVG fallback for simple untextured models. GPU/globe integration still needs WebGL2 browser acceptance. Lists and genuine links accompany canvas views; URLs retain time, camera, filters, language and content revision.
-
-## Dependencies and licenses
-
-The existing GNU GPL v2 [LICENSE](LICENSE) is preserved. Third-party terms remain separate. [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), `public/licenses/` and `vendor/manifest.json` contain versions, sources, hashes and license texts. `npm run vendor` is an explicit online maintenance command, not a normal build step.
-
-`src/domain`, `catalog`, `query`, `state` form the independent core; `map`, `timeline`, `network`, `models` are adapters; `ui`, `i18n` handle presentation. `tools/` builds and checks content. `fixtures/` remains synthetic. `tests/unit/` is executable; `tests/browser/` separates planned cases from observed QA.
+The existing GNU GPL v2 [LICENSE](LICENSE) is preserved. [Third-party notices](THIRD_PARTY_NOTICES.md) list the shipped open-source components and local license texts. Updates are explicit maintainer changes; nothing downloads newer code at runtime.
