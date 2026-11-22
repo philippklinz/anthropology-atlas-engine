@@ -1,7 +1,8 @@
 import { matchesTime } from '../domain/time.js';
 export function textKey(s) { return s.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase().trim(); }
 export function localized(labels, language, fallback = 'de') { return labels?.[language] ?? labels?.[language.split('-')[0]] ?? labels?.[fallback] ?? Object.values(labels ?? {})[0] ?? ''; }
-export function temporalMatch(id, times, f) { const t = times[id]; return !t || (!t.possible ? f.includeUndated : matchesTime(t, f.range, f.mode)); }
+export function matchesTypes(meta, types) { return !types.length || types.includes(meta.type) || types.includes(meta.kind); }
+export function temporalMatch(id, times, f) { const t = times[id]; return f.allTime || !t || (!t.possible ? f.includeUndated : matchesTime(t, f.range, f.mode)); }
 export function rankSearch(docs, query, lang) {
     const q = textKey(query);
     return docs.flatMap(d => {

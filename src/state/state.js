@@ -3,9 +3,10 @@ export const views = ['map', 'chapter', 'entity', 'assertion', 'event', 'source'
 export const uniq = (a) => [...new Set(a)].sort();
 export function defaultState(chapter, sourceKey, release, language = 'de') {
     const t = normalizeTime(chapter.initialState.time), year = t.possible ? calendarDate(t.possible.from).year : 1;
-    return { version: 1, view: chapter.id ? 'chapter' : 'map', id: chapter.id || undefined, language: language === 'en' ? 'en' : 'de', sourceKey, release, chapter: chapter.id, time: { year }, camera: chapter.initialState.camera, layers: uniq([...chapter.initialState.layers, 'located-at', 'events']), types: [], packages: [], mode: 'overlap', includeUndated: false, interpretations: Object.fromEntries((chapter.interpretationChoices ?? []).map(c => [c.interpretationId, c.assertionId])), query: '', expanded: [], selection: [], detail: 'overview' };
+    return { version: 1, view: chapter.id ? 'chapter' : 'map', id: chapter.id || undefined, language: language === 'en' ? 'en' : 'de', sourceKey, release, chapter: chapter.id, time: chapter.initialState.time.kind === 'interval' && t.possible ? t.possible : { year }, camera: chapter.initialState.camera, layers: uniq([...chapter.initialState.layers, 'located-at', 'events']), types: [], packages: [], mode: 'overlap', includeUndated: false, interpretations: Object.fromEntries((chapter.interpretationChoices ?? []).map(c => [c.interpretationId, c.assertionId])), query: '', searchScope: 'selection', expanded: [], selection: [], detail: 'overview' };
 }
 export function filters(s) { return { range: 'year' in s.time ? yearRange(s.time.year) : s.time, mode: s.mode, includeUndated: s.includeUndated, layers: s.layers, types: s.types, packages: s.packages, interpretations: s.interpretations }; }
+export function searchFilters(s) { return { ...filters(s), allTime: s.searchScope === 'catalog' }; }
 export function normalizeState(s) {
     const r = structuredClone(s);
     r.layers = uniq(r.layers);
@@ -44,6 +45,7 @@ export function encodeState(input) {
         q.set('step', s.step);
     if (s.query)
         q.set('q', s.query);
+    if (s.searchScope === 'catalog') q.set('scope', 'catalog');
     if (Object.keys(s.interpretations).length)
         q.set('interpretations', JSON.stringify(s.interpretations));
     if (s.spatialFilter)
@@ -112,6 +114,8 @@ export function decodeState(hash, defaults, chapters = []) {
     }
     s.includeUndated = q.get('undated') === '1';
     s.query = q.get('q') ?? '';
+    if (q.has('scope') && !['catalog', 'selection'].includes(q.get('scope'))) throw new Error('URL_FILTER: invalid search scope');
+    s.searchScope = q.get('scope') ?? 'selection';
     s.detail = q.get('detail') ?? 'overview';
     if (q.has('interpretations')) {
         const v = JSON.parse(q.get('interpretations'));
@@ -127,4 +131,8 @@ export function decodeState(hash, defaults, chapters = []) {
     }
     return { state: normalizeState(s), warnings };
 }
-export function target(s, view, id) { return { ...s, view, id }; }
+export function target(s, view, id) {
+    // A directory category restricts its result list, not the selected object's relationships.
+    const exitDirectory = s.view === 'search' && s.searchScope === 'catalog' && view !== 'search';
+    return { ...s, ...(exitDirectory ? { types: [], searchScope: 'selection' } : {}), view, id };
+}

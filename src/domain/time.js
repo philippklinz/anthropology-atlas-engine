@@ -59,12 +59,16 @@ export function utcDate(day) { return new globalThis.Date(day * 86400000); }
 export function formatYear(year, lang = 'de') {
     return `${year <= 0 ? 1 - year : year} ${lang.startsWith('de') ? year <= 0 ? 'v. Chr.' : 'n. Chr.' : year <= 0 ? 'BCE' : 'CE'}`;
 }
-export function formatTime(t, lang = 'de') {
+export function formatTime(t, lang = 'de', useOriginal = true) {
     if (t.kind === 'unknown')
         return lang === 'de' ? 'Undatiert' : 'Undated';
     const fmt = (e) => {
         if (!e)
             return '?';
+        if (useOriginal && e.original) {
+            const calendar = e.original.calendar === 'julian' ? (lang === 'de' ? 'julianisch' : 'Julian') : e.original.calendar;
+            return `${e.original.text} (${calendar})`;
+        }
         const a = e.earliest, b = e.latest;
         const day = (d) => e.precision === 'day' ? `${d.day}.${d.month}. ${formatYear(d.year, lang)}` : e.precision === 'month' ? `${d.month}. ${formatYear(d.year, lang)}` : formatYear(d.year, lang);
         const same = e.precision === 'year' ? a.year === b.year : e.precision === 'month' ? a.year === b.year && a.month === b.month : epochDay(a) === epochDay(b);

@@ -3,7 +3,7 @@ import configSchema from '../../schemas/0.1.0/config.schema.json' with { type: '
 import catalogSchema from '../../schemas/0.1.0/catalog.schema.json' with { type: 'json' };
 import recordSchema from '../../schemas/0.1.0/record.schema.json' with { type: 'json' };
 import { contentURL } from '../domain/paths.js';
-import { bboxOverlap, rankSearch, temporalMatch } from '../query/query.js';
+import { bboxOverlap, rankSearch, temporalMatch, matchesTypes } from '../query/query.js';
 const ajv = new Ajv2020({ strict: false });
 addFormats(ajv);
 const validConfig = ajv.compile(configSchema), validCatalog = ajv.compile(catalogSchema), validRecord = ajv.compile(recordSchema);
@@ -111,7 +111,7 @@ export class StaticProvider {
         const meta = this.index.records[id];
         if (!meta)
             return false;
-        return (!f.packages.length || f.packages.includes(meta.packageId)) && (!f.types.length || f.types.includes(meta.type ?? meta.kind)) && temporalMatch(id, this.times, f);
+        return (!f.packages.length || f.packages.includes(meta.packageId)) && matchesTypes(meta, f.types) && temporalMatch(id, this.times, f);
     }
     page(items, cursor) { const offset = cursor ? Number(cursor) : 0; if (!Number.isInteger(offset) || offset < 0)
         throw new Error('CURSOR_INVALID'); return { dataReleaseId: this.catalog.dataReleaseId, items: items.slice(offset, offset + 60), ...(items.length > offset + 60 ? { nextCursor: String(offset + 60) } : {}) }; }
@@ -120,7 +120,26 @@ export class StaticProvider {
         const docs = await this.items(path);
         return this.page(rankSearch(docs.filter(d => this.include(d.id, f)), query, language), cursor);
     }
-    async relations(id, f, cursor) { return this.page((this.edges[id] ?? []).filter(r => this.include(r.id, f)), cursor); }
+    async relations(id, f, cursor) {
+        const edges = (this.edges[id] ?? []).filter(r => this.include(r.id, f));
+        const meta = this.index.records[id];
+        // Places and waypoints are explicit event references, not new historical assertions.
+        // Older catalogues indexed participants only, so derive these edges at query time.
+        const events = meta?.kind === 'event' ? [id] : meta?.kind === 'entity' && meta.type === 'place'
+            ? Object.keys(this.index.records).filter(key => this.index.records[key].kind === 'event') : [];
+        for (const eventId of events) {
+            if (!this.include(eventId, f)) continue;
+            const event = await this.getRecord(eventId);
+            const locations = new Map((event.placeIds ?? []).map(place => [place, 'event-location']));
+            for (const waypoint of event.waypoints ?? []) if (waypoint.placeId && !locations.has(waypoint.placeId)) locations.set(waypoint.placeId, 'waypoint');
+            for (const [place, predicate] of locations) {
+                if (id !== eventId && id !== place) continue;
+                if (!edges.some(e => e.id === eventId && e.from === eventId && e.to === place && e.predicate === predicate))
+                    edges.push({ id: eventId, from: eventId, to: place, predicate, symmetric: false, event: true });
+            }
+        }
+        return this.page(edges, cursor);
+    }
     async features(viewport, f) {
         const features = [];
         const excluded = new Set();
