@@ -6,7 +6,7 @@ import { normalizeTime } from '../src/domain/time.js';
 import { walk } from '../src/domain/references.js';
 import { geometryBBox, normalizeWinding } from './geometry.js';
 import { validate, makeValidators } from './validate.js';
-export const COMPILER_VERSION = '0.1.0-dev.7';
+export const COMPILER_VERSION = '0.1.0-dev.8';
 export function report(v) { return { profile: v.profile, records: v.records.size, errors: v.issues.filter(x => x.severity === 'error').length, warnings: v.issues.filter(x => x.severity === 'warning').length, issues: v.issues }; }
 export async function buildContent(workspace, profile, sourceRevision) {
     if (!/^[a-f0-9]{40}$/.test(sourceRevision))
@@ -35,6 +35,7 @@ export async function buildContent(workspace, profile, sourceRevision) {
     for (const record of originals) {
         if (['specimen','taxon'].includes(record.entityType)) required.add('natural-history');
         if (record.kind === 'assertion' && ['has-genetic-ancestry-from','genetically-related-to'].includes(record.predicate)) required.add('genetic-relationships');
+        if (record.kind === 'event' && record.eventType === 'migration' || record.spatial?.some(s => s.direction || ['land-reconstruction','ice-reconstruction'].includes(s.role)) || record.kind === 'interpretation' && record.memberIds.some(id => id.startsWith('event:')) || record.kind === 'chapter' && record.steps?.length) required.add('migration-maps');
         if (record.kind === 'asset' && record.assetType === 'image') required.add('image-viewer');
         walk(record, value => { if (value && typeof value === 'object' &&
             (value.basis === 'years-before' || value.kind === 'before' || value.year < -10000)) required.add('deep-time'); });
@@ -103,7 +104,7 @@ export async function buildContent(workspace, profile, sourceRevision) {
                 if (g?.kind === 'geometry') {
                     const src = posix.join(posix.dirname(v.paths.get(g.id)), v.records.get(g.id).file);
                     const f = JSON.parse(new TextDecoder().decode(v.payloads.get(src)));
-                    spatial.push({ recordId: r.id, geometryId: g.id, path: g.file, role: s.role, bbox: geometryBBox(f.geometry) });
+                    spatial.push({ recordId: r.id, geometryId: g.id, path: g.file, role: s.role, ...(s.direction ? {direction:s.direction} : {}), bbox: geometryBBox(f.geometry) });
                 }
             }
         const labels = index.records[r.id].labels;
@@ -120,6 +121,7 @@ export async function buildContent(workspace, profile, sourceRevision) {
     }
     const discovery = await json('discovery', 'discovery', wrap(index.chapters.map(chapter => ({
         id: chapter.id, kind: 'chapter', labels: chapter.labels, initialState: chapter.initialState,
+        steps: chapter.steps, interpretationChoices: chapter.interpretationChoices,
         discovery: chapter.discovery ?? {summary: {}, periods: [], regions: [], topics: []},
         searchTerms: [...new Set((chapter.recordIds ?? chapter.focusIds).flatMap(id => {
             const record = registry.get(id);

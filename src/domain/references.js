@@ -1,4 +1,4 @@
-const singles = new Set(['sourceId', 'subjectId', 'objectId', 'entityId', 'geometryId', 'placeId', 'parentEventId', 'scriptId', 'fontAssetId', 'assetId', 'anchorGeometryId', 'interpretationId', 'assertionId']);
+const singles = new Set(['sourceId', 'subjectId', 'objectId', 'entityId', 'geometryId', 'placeId', 'parentEventId', 'scriptId', 'fontAssetId', 'assetId', 'anchorGeometryId', 'interpretationId', 'assertionId', 'recordId']);
 const lists = new Set(['assetIds', 'entityIds', 'scopeIds', 'placeIds', 'focusIds', 'memberIds', 'recordIds', 'entryChapterIds', 'selectedIds', 'dependencies']);
 export function references(value, path = '') {
     if (Array.isArray(value))

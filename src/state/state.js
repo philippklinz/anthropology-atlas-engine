@@ -1,9 +1,10 @@
 import { epochDay, yearRange, normalizeTime, calendarDate, MIN_YEAR, MAX_YEAR } from '../domain/time.js';
+import { chapterStepState } from './steps.js';
 export const views = ['explore', 'map', 'chapter', 'entity', 'assertion', 'event', 'source', 'network', 'model', 'image', 'search', 'about', 'licenses'];
 export const uniq = (a) => [...new Set(a)].sort();
 export function defaultState(chapter, sourceKey, release, language = 'de') {
     const t = normalizeTime(chapter.initialState.time), year = t.possible ? calendarDate(t.possible.from).year : 1;
-    return { version: 1, view: chapter.id ? 'chapter' : 'map', id: chapter.id || undefined, language: language === 'en' ? 'en' : 'de', sourceKey, release, chapter: chapter.id, chapters: chapter.id ? [chapter.id] : [], browse: {}, time: chapter.initialState.time.kind === 'interval' && t.possible ? t.possible : { year }, camera: chapter.initialState.camera, layers: uniq([...chapter.initialState.layers, 'located-at', 'events']), types: [], packages: [], mode: 'overlap', includeUndated: false, interpretations: Object.fromEntries((chapter.interpretationChoices ?? []).map(c => [c.interpretationId, c.assertionId])), query: '', searchScope: 'selection', expanded: [], selection: [], detail: 'overview' };
+    return { version: 1, view: chapter.id ? 'chapter' : 'map', id: chapter.id || undefined, language: language === 'en' ? 'en' : 'de', sourceKey, release, chapter: chapter.id, chapters: chapter.id ? [chapter.id] : [], browse: {}, time: chapter.initialState.time.kind === 'interval' && t.possible ? t.possible : { year }, camera: chapter.initialState.camera, layers: uniq([...chapter.initialState.layers, 'located-at', 'events']), types: [], packages: [], mode: 'overlap', includeUndated: false, interpretations: Object.fromEntries((chapter.interpretationChoices ?? []).map(c => [c.interpretationId, (c.recordId ?? c.assertionId)])), query: '', searchScope: 'selection', expanded: [], selection: [], detail: 'overview' };
 }
 export function filters(s) { return { chapters: s.chapters, range: 'year' in s.time ? yearRange(s.time.year) : s.time, mode: s.mode, includeUndated: s.includeUndated, layers: s.layers, types: s.types, packages: s.packages, interpretations: s.interpretations }; }
 export function searchFilters(s) { return { ...filters(s), allTime: ['chapters', 'catalog'].includes(s.searchScope) }; }
@@ -50,8 +51,9 @@ export function encodeState(input) {
     if (s.query)
         q.set('q', s.query);
     if (s.searchScope !== 'selection') q.set('scope', s.searchScope);
-    if (Object.keys(s.interpretations).length)
-        q.set('interpretations', JSON.stringify(s.interpretations));
+    // An explicit empty object means comparison mode, even when a chapter
+    // supplies a default interpretation. Omitting it would restore that default.
+    q.set('interpretations', JSON.stringify(s.interpretations));
     if (s.spatialFilter)
         q.set('bbox', s.spatialFilter.join(','));
     return `#/v1/${s.view}${s.id ? '/' + encodeURIComponent(s.id) : ''}?${q}`;
@@ -96,6 +98,12 @@ export function decodeState(hash, defaults, chapters = []) {
     }
     if (s.browse.from !== undefined && s.browse.to !== undefined && s.browse.from > s.browse.to) throw new Error('URL_BROWSE: inverted range');
     s.step = q.get('step') ?? undefined;
+    if(s.step && chapter) {
+        const step=chapterStepState(s,chapter,s.step);
+        if(!q.has('at') && !q.has('range')) s.time=step.time;
+        if(!q.has('camera')) s.camera=step.camera;
+        if(!q.has('layers')) s.layers=step.layers;
+    }
     if (s.view === 'chapter' && s.chapter !== s.id)
         throw new Error('URL_TARGET: conflicting chapter');
     if (q.has('at') && q.has('range'))

@@ -2,6 +2,7 @@ import { ChapterSearch, chronological, openChapters } from './query/chapters.js'
 import { renderExplorer } from './ui/explorer.js';
 import { imageURL } from './ui/images.js';
 import { AtlasLayout } from './ui/layout.js';
+import { renderMapContext, interpretationPanel, layerLabels } from './ui/cartography.js';
 import { StaticProvider } from './catalog/provider.js';
 import { categoryCounts, activeCategory, directoryState } from './ui/directory.js';
 import { emptyContext } from './state/empty.js';
@@ -19,7 +20,7 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<'
 const icon = (name) => { const paths = { globe: '<circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18M5 6h14M5 18h14"/>', network: '<circle cx="5" cy="6" r="3"/><circle cx="18" cy="5" r="3"/><circle cx="13" cy="19" r="3"/><path d="m8 6 7-1M7 8l5 8m5-8-3 8"/>', search: '<circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/>', book: '<path d="M3 4h6l3 2 3-2h6v15h-6l-3 2-3-2H3zM12 6v15"/>', cube: '<path d="m12 2 9 5v10l-9 5-9-5V7zM3 7l9 5 9-5M12 12v10"/>' }; return `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5">${paths[name] ?? paths.book}</svg>`; };
 document.querySelector('a.skip')?.addEventListener('click', e => { e.preventDefault(); ($('explorer').hidden ? $('main') : $('explore-main')).focus(); });
 const root = $('app');
-root.innerHTML = `<section id="explorer" hidden aria-label="Kapitel / Chapters"></section><div class="atlas-shell"><button id="menu-backdrop" tabindex="-1" hidden></button><aside id="sidebar" aria-label="Navigation" aria-hidden="true" inert></aside><header id="topbar"></header><main id="main" tabindex="-1"><div class="stage"><div id="map"></div><div id="network" hidden></div><div id="model" hidden></div><div id="page" hidden></div><div id="map-tools"></div><div id="map-notice" hidden></div><div id="map-caption"></div></div><aside id="detail" aria-label="Details"></aside></main><footer id="timebar"></footer><div id="announcer" role="status" aria-live="polite" class="sr-only"></div></div>`;
+root.innerHTML = `<section id="explorer" hidden aria-label="Kapitel / Chapters"></section><div class="atlas-shell"><button id="menu-backdrop" tabindex="-1" hidden></button><aside id="sidebar" aria-label="Navigation" aria-hidden="true" inert></aside><header id="topbar"></header><main id="main" tabindex="-1"><div class="stage"><div id="map"></div><div id="network" hidden></div><div id="model" hidden></div><div id="page" hidden></div><div id="map-tools"></div><div id="map-notice" hidden></div><div id="map-caption"></div><div id="map-context" hidden></div></div><aside id="detail" aria-label="Details"></aside></main><footer id="timebar"></footer><div id="announcer" role="status" aria-live="polite" class="sr-only"></div></div>`;
 let provider, discovery, router, map, timeline, network, disposeModel, generation = 0, hasDemo = false;
 const layout = new AtlasLayout(document.querySelector('.atlas-shell'), () => { if (!$('map').hidden) map?.resize(); timeline?.resize(); });
 const isEmpty = () => provider.catalog.entrypoints.defaultChapterId === null;
@@ -41,16 +42,16 @@ function chapterBadges(s,id) { return `<span class="chapter-badges">${chronologi
 function recordList(s, ids) { return `<ul class="record-list">${ids.map(id => `<li>${link(s, id)}<span>${esc(typeLabels[provider.index.records[id]?.type ?? '']?.[s.language === 'de' ? 0 : 1] ?? typeLabels[provider.index.records[id]?.kind ?? '']?.[s.language === 'de' ? 0 : 1] ?? '')}</span>${chapterBadges(s,id)}</li>`).join('')}</ul>`; }
 function setError(error) { document.querySelector('.atlas-shell').inert = false; $('explorer').hidden = true; document.querySelector('.atlas-shell').hidden = false; const msg = error instanceof Error ? error.message : String(error); $('page').hidden = false; $('page').innerHTML = `<div class="reading"><p class="eyebrow">Atlas</p><h1>Diese Ansicht ist nicht verfügbar / View unavailable</h1><p>${esc(msg)}</p><a href="#/v1/map">Zum Atlas / Return to atlas</a><button id="retry">Neu laden / Reload</button></div>`; $('retry').onclick = () => location.reload(); $('announcer').textContent = msg; }
 function formYear(s, year) { if (Number.isInteger(year) && year >= MIN_YEAR && year <= MAX_YEAR)
-    router.commit({ ...s, time: { year } }); }
+    router.commit({ ...s, time: { year }, step:undefined }); }
 function chapterState(ch, s) { return { ...s, view:'chapter', id:ch.id, chapter:ch.id, step:undefined, types:[], searchScope:'selection' }; }
 function renderControls(s, ch) {
     const m = messages[s.language], url = (view, id) => esc(encodeState(target(s, view, id)));
-    const allLayers = [...new Set([...provider.spatial.filter(x=>provider.belongs(x.recordId,s.chapters)).map(x => provider.index.records[x.recordId]?.kind === 'event' ? 'events' : provider.index.records[x.recordId]?.type ?? ''), 'events'])].filter(Boolean);
+    const allLayers = [...new Set([...provider.spatial.filter(x=>provider.belongs(x.recordId,s.chapters)).map(x => ['land-reconstruction','ice-reconstruction'].includes(x.role) ? 'landscapes' : provider.index.records[x.recordId]?.type === 'migration' ? 'migrations' : provider.index.records[x.recordId]?.kind === 'event' ? 'events' : provider.index.records[x.recordId]?.type ?? ''), 'events'])].filter(Boolean);
     const directory = categoryCounts(provider.scopedRecords(s.chapters)), category = s.view === 'search' ? activeCategory(s.types) : undefined;
     const entry = c => `<a class="directory-link ${category?.key === c.key ? 'active' : ''}" ${category?.key === c.key ? 'aria-current="page"' : ''} href="${esc(encodeState(directoryState(s, c.types)))}"><span>${esc(c.labels[s.language === 'de' ? 0 : 1])}</span><span class="directory-count">${c.count}</span></a>`;
     const directoryNav = `<nav class="nav-section directory" aria-label="${m.directory}"><span class="eyebrow">${m.directory}</span>${directory.filter(c => c.count > 0).map(entry).join('')}<details ${category && !directory.find(c => c.key === category.key)?.count ? 'open' : ''}><summary>${m.moreCategories}</summary>${directory.filter(c => c.count === 0).map(entry).join('')}<p class="nav-hint">${m.emptyCategories}</p></details></nav>`;
     const choices = chronological(provider.index.chapters.filter(c=>s.chapters.includes(c.id))).map(c => `<a class="chapter-link ${s.chapter === c.id ? 'active' : ''}" href="${esc(encodeState(chapterState(c, s)))}">${icon('book')}<span>${esc(localized(c.labels, s.language))}</span></a>`).join('');
-    $('sidebar').innerHTML = `<div class="sidebar-heading"><button id="menu-close" class="icon-button" aria-label="${m.closeNavigation}">×</button><a class="brand" href="${url('map')}">${icon('globe')}<span>ANTHROPOLOGY<br><strong>ATLAS</strong></span></a></div><p class="brand-subtitle">${m.subtitle}</p><div class="nav-section"><div class="selection-heading"><span class="eyebrow">${s.language === 'de' ? 'Ausgewählte Kapitel' : 'Selected chapters'}</span><span class="selection-count">${s.chapters.length}</span></div>${choices}<a class="edit-selection" href="${url('explore')}">${s.language === 'de' ? 'Auswahl bearbeiten' : 'Edit selection'}</a></div>${directoryNav}<div class="nav-section"><span class="eyebrow">${m.layers}</span><form id="layers-form">${allLayers.map(l => `<label class="layer"><input type="checkbox" name="layer" value="${esc(l)}" ${s.layers.includes(l) ? 'checked' : ''}><span class="layer-mark ${l === 'events' ? 'event' : l === 'trades-with' ? 'trade' : ''}"></span>${esc(l === 'events' ? (s.language === 'de' ? 'Reisen und Ereignisse' : 'Journeys and events') : localized(pred[l]?.labels, s.language) || l)}</label>`).join('')}</form></div><nav class="secondary-nav"><a href="${esc(encodeState(directoryState(s)))}">${icon('search')}${m.showAll}</a><a href="${url('about')}">${m.about}</a><a href="${url('licenses')}">${m.licenses}</a></nav><div class="sidebar-bottom"><span class="version">ENGINE 0.1.0-dev.7</span><span>${isDemo() ? m.demo : esc(provider.catalog.dataReleaseId)}</span></div>`;
+    $('sidebar').innerHTML = `<div class="sidebar-heading"><button id="menu-close" class="icon-button" aria-label="${m.closeNavigation}">×</button><a class="brand" href="${url('map')}">${icon('globe')}<span>ANTHROPOLOGY<br><strong>ATLAS</strong></span></a></div><p class="brand-subtitle">${m.subtitle}</p><div class="nav-section"><div class="selection-heading"><span class="eyebrow">${s.language === 'de' ? 'Ausgewählte Kapitel' : 'Selected chapters'}</span><span class="selection-count">${s.chapters.length}</span></div>${choices}<a class="edit-selection" href="${url('explore')}">${s.language === 'de' ? 'Auswahl bearbeiten' : 'Edit selection'}</a></div>${directoryNav}<div class="nav-section"><span class="eyebrow">${m.layers}</span><form id="layers-form">${allLayers.map(l => `<label class="layer"><input type="checkbox" name="layer" value="${esc(l)}" ${s.layers.includes(l) ? 'checked' : ''}><span class="layer-mark ${l === 'events' ? 'event' : l === 'trades-with' ? 'trade' : ''}"></span>${esc(l === 'events' ? (s.language === 'de' ? 'Reisen und Ereignisse' : 'Journeys and events') : (layerLabels[l]?.[s.language==='de'?0:1] ?? localized(pred[l]?.labels, s.language)) || l)}</label>`).join('')}</form></div><nav class="secondary-nav"><a href="${esc(encodeState(directoryState(s)))}">${icon('search')}${m.showAll}</a><a href="${url('about')}">${m.about}</a><a href="${url('licenses')}">${m.licenses}</a></nav><div class="sidebar-bottom"><span class="version">ENGINE 0.1.0-dev.8</span><span>${isDemo() ? m.demo : esc(provider.catalog.dataReleaseId)}</span></div>`;
     $('topbar').innerHTML = `<button id="menu-button" class="icon-button" aria-label="${m.openNavigation}" aria-controls="sidebar" aria-expanded="false"><span aria-hidden="true">☰</span><span class="menu-label">${m.menu}</span></button><div class="top-title"><span class="eyebrow">${m.explore}</span><strong>${esc(localized(ch.labels, s.language))}</strong></div><form id="search-form" role="search"><label class="sr-only" for="search-input">${m.search}</label>${icon('search')}<input id="search-input" name="q" value="${esc(s.query)}" placeholder="${m.search}"><button type="submit" aria-label="${m.searchButton}">${icon('search')}</button></form><nav class="language"><a href="${esc(encodeState({ ...s, language: 'de' }))}" ${s.language === 'de' ? 'aria-current="true"' : ''}>DE</a><a href="${esc(encodeState({ ...s, language: 'en' }))}" ${s.language === 'en' ? 'aria-current="true"' : ''}>EN</a></nav>`;
     const focus = s.id && ['entity', 'event', 'network'].includes(s.view) ? s.id : ch.focusIds.find(id => provider.index.records[id]?.kind === 'entity');
     $('map-tools').innerHTML = `<div class="view-tabs"><a class="${!['network','model','image'].includes(s.view) ? 'active' : ''}" href="${url('map')}">${icon('globe')}${m.map}</a><a class="${s.view === 'network' ? 'active' : ''}" href="${url('network', focus)}">${icon('network')}${m.network}</a></div><div class="view-actions"><button id="world">${m.world}</button><button id="reset">${s.language === 'de' ? 'Auswahlansicht' : 'Selection view'}</button><button id="copy" aria-label="${m.copy}">${icon('book')} <span>${m.copy}</span></button></div>`;
@@ -75,7 +76,7 @@ function renderControls(s, ch) {
     const deep = isDeepYear(year), step = deep ? 1000 : 1;
     const ageHint = s.language === 'de' ? 'BP = Jahre vor 1950 · Schraffur: Datierungsbereich, keine Dauer · ‹: ältere Grenze offen' : 'BP = years before 1950 · Hatching: dating range, not duration · ‹: older limit unknown';
     $('time-controls').innerHTML = `<div><span class="eyebrow">${m.time}</span><strong class="current-year">${esc('year' in s.time ? formatDisplayYear(year,s.language) : formatRange(s.time,s.language))}</strong></div><button class="selection-time-reset" id="selection-time">${s.language==='de'?'Gesamter Zeitraum':'Full date range'}</button><form id="year-form"><button type="button" id="previous" aria-label="${deep ? (s.language==='de'?'1.000 Jahre früher':'1,000 years earlier') : m.previous}">−</button><label class="sr-only" for="year">${m.year}</label><input id="year" type="number" min="1" max="${MAX_BP}" value="${deep ? BP_REFERENCE_YEAR-year : year <= 0 ? 1-year : year}" required><label class="sr-only" for="era">Era</label><select id="era"><option value="bp" ${deep?'selected':''}>${s.language==='de'?'Jahre BP':'years BP'}</option><option value="ce" ${!deep && year>0?'selected':''}>${m.ce}</option><option value="bce" ${!deep && year<=0?'selected':''}>${m.bce}</option></select><button type="submit">${m.apply}</button><button type="button" id="next" aria-label="${deep ? (s.language==='de'?'1.000 Jahre später':'1,000 years later') : m.next}">+</button></form><p class="time-hint">${deep ? ageHint : m.gap}</p>`;
-    $('selection-time').onclick = () => router.commit({...s,time:openChapters(s,provider.index.chapters).time});
+    $('selection-time').onclick = () => router.commit({...s,step:undefined,time:openChapters(s,provider.index.chapters).time});
     const eraBounds = () => { const era=$('era').value; $('year').min=era==='bp'?'0':'1'; $('year').max=String(era==='bp'?MAX_BP:era==='bce'?1-MIN_YEAR:MAX_YEAR); };
     $('era').onchange = eraBounds; eraBounds();
     $('year-form').onsubmit = e => { e.preventDefault(); const y = Number($('year').value); formYear(s, $('era').value === 'bp' ? yearFromBP(y) : $('era').value === 'bce' ? 1-y : y); };
@@ -85,7 +86,7 @@ function renderControls(s, ch) {
     layout.sync(m);
     timeline.update(s);
 }
-function prose(text) { return text.split(/\n\s*\n/).map(p => p.startsWith('# ') ? `<h2>${esc(p.slice(2))}</h2>` : p.startsWith('## ') ? `<h3>${esc(p.slice(3))}</h3>` : `<p>${esc(p).replace(/\n/g, '<br>')}</p>`).join(''); }
+function prose(text) { return text.split(/\n\s*\n/).map(p => p.startsWith('# ') ? `<h2>${esc(p.slice(2))}</h2>` : p.startsWith('## ') ? `<h3>${esc(p.slice(3))}</h3>` : `<p>${esc(p).replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>')}</p>`).join(''); }
 
 function citations(s, r) {
     const m = messages[s.language];
@@ -121,17 +122,20 @@ async function figure(s, asset, full=false) {
     return `<figure class="content-image ${full?'full-image':''}">${full ? image : `<a href="${esc(href(s,asset.id,'image'))}" aria-label="${esc(localized(asset.labels,s.language))}">${image}</a>`}<figcaption><span>${esc(localized(asset.alt,s.language))}</span><small>${esc(asset.rights.attribution)} · ${rightsLabel(asset.rights)}</small></figcaption></figure>`;
 }
 
-async function detail(s, ch, ids) {
+async function detail(s, ch, ids, groups=[]) {
     const m = messages[s.language], r = s.id ? await provider.getRecord(s.id) : ch;
     const common = isDemo() ? `<p class="badge">${m.demo}</p><p><a href="./">${s.language === 'de' ? 'Zu den historischen Inhalten' : 'Open historical content'}</a></p>` : r.editorial?.status === 'draft' ? `<p class="badge">${m.researchDraft}</p>` : '';
     if (!ch.id && !s.id) return emptyDetail(s);
+    const variants=interpretationPanel(s,groups,label,provider.times);
     if (r.kind === 'chapter') {
         const file = r.textFiles[s.language] ?? Object.values(r.textFiles)[0], text = new TextDecoder().decode(await provider.bytes(file));
         const sections = text.split(/\n\s*\n/);
-        const intro = sections.splice(0, /^#\s/.test(sections[0]) ? 2 : 1).join('\n\n');
-        const heroId = r.focusIds.find(id=>provider.index.records[id]?.assetType === 'image');
+        if (/^#\s/.test(sections[0])) sections.shift();
+        const intro = sections.shift() ?? '';
+        const step=r.steps?.find(step=>step.id===s.step);
+        const heroId = step ? step.assetId : r.focusIds.find(id=>provider.index.records[id]?.assetType === 'image');
         const hero = heroId ? await figure(s,await provider.getRecord(heroId)) : ''; 
-        return `${common}<h1>${esc(localized(r.labels, s.language))}</h1><div class="chapter-text intro">${prose(intro)}</div>${hero}<h2>${m.explore}</h2>${recordList(s, r.focusIds)}<div class="chapter-text">${prose(sections.join('\n\n'))}</div><details class="metadata"><summary>${m.results} · ${ids.length}</summary>${recordList(s, ids)}</details>${citations(s, r)}${isDemo() ? `<div class="note">${m.demoText}</div>` : ''}`;
+        return `${common}<h1>${esc(localized(r.labels, s.language))}</h1>${step?.summary?`<p class="note">${esc(localized(step.summary,s.language))}</p>`:''}${variants}<div class="chapter-text intro">${prose(intro)}</div>${hero}<h2>${m.explore}</h2>${recordList(s, r.focusIds)}<div class="chapter-text">${prose(sections.join('\n\n'))}</div><details class="metadata"><summary>${m.results} · ${ids.length}</summary>${recordList(s, ids)}</details>${citations(s, r)}${isDemo() ? `<div class="note">${m.demoText}</div>` : ''}`;
     }
     let body = '';
     if ('time' in r)
@@ -144,9 +148,12 @@ async function detail(s, ch, ids) {
         if (explanation) body += `<p class="lede">${esc(localized(explanation, s.language))}</p>`;
     }
     if (r.kind === 'event') {
+        const status={attested:['Belegt','Attested'],inferred:['Aus Belegen erschlossen','Inferred from evidence'],hypothetical:['Mögliche Rekonstruktion','Hypothetical reconstruction'],disputed:['In der Forschung umstritten','Disputed in research']}[r.epistemic.status];
+        body+=`<p class="note">${esc(status?.[s.language==='de'?0:1])}${r.epistemic.note?` · ${esc(localized(r.epistemic.note,s.language))}`:''}</p>`;
         body += `${r.note ? `<p class="lede">${esc(localized(r.note, s.language))}</p>` : ''}<h2>${m.participants}</h2>${`<ul class="record-list">${r.participants.map(p => `<li>${link(s, p.entityId)}<span>${esc(eventRoleLabels[p.role]?.[s.language === 'de' ? 0 : 1] ?? p.role)}</span></li>`).join('')}</ul>`}`;
         if (r.waypoints?.length) body += `<h2>${m.stations}</h2><ol class="waypoints">${r.waypoints.map(w => `<li>${w.placeId ? link(s, w.placeId) : link(s, w.geometryId)}<span class="date-label">${esc(formatTime(w.time, s.language))}</span></li>`).join('')}</ol>`;
         if (r.parentEventId) body += `<p>${m.partOfJourney}: ${link(s, r.parentEventId)}</p>`;
+        if(r.eventType==='migration')body+=variants;
     }
     const mapLink = await locationLink(s, r);
     if (mapLink) body += mapLink;
@@ -206,13 +213,15 @@ async function render(s, warnings) {
         }
         if (!active())
             return;
+        const groups=await provider.interpretationGroups(s.chapters);
+        if(!active())return;
         renderControls(s, chapter);
         document.querySelector('.atlas-shell').classList.toggle('empty-catalog', isEmpty());
         const features = await provider.features(s.spatialFilter, filters(s));
         if (!active())
             return;
         const ids = [...new Set(features.features.map(f => String(f.properties?.recordId)))];
-        const content = await detail(s, chapter, ids);
+        const content = await detail(s, chapter, ids, groups);
         if (!active())
             return;
         $('detail').innerHTML = content;
@@ -227,6 +236,8 @@ async function render(s, warnings) {
         $('model').hidden = !['model','image'].includes(s.view);
         $('page').hidden = !['search', 'about', 'licenses'].includes(s.view);
         $('map-caption').hidden = $('map').hidden;
+        renderMapContext($('map-context'),s,chapter,features,provider,next=>router.commit(next));
+        if($('map').hidden)$('map-context').hidden=true;
         $('map-notice').hidden = $('map').hidden || ids.length > 0 || isEmpty();
         $('map-notice').innerHTML = `<strong>${m.empty}</strong><p>${m.emptyHint}</p>`;
         if (!map) {
@@ -305,7 +316,7 @@ async function render(s, warnings) {
                 } };
         }
         if (s.view === 'about')
-            $('page').innerHTML = `<div class="reading"><p class="eyebrow">${m.about}</p><h1>${m.subtitle}</h1><p class="lede">${s.language === 'de' ? 'Ein offener Atlas für Geschichte, Gesellschaften und ihre Verbindungen.' : 'An open atlas of history, societies and their connections.'}</p>${isDemo() ? `<p>${m.demoText}</p>` : ''}<h2>${m.sourceVersion}</h2><code>${esc(provider.catalog.dataReleaseId)}</code><p>${provider.catalog.files.length} ${s.language === 'de' ? 'Dateien mit SHA-256-Prüfsummen' : 'files with SHA-256 checksums'}</p><h2>${m.engineVersion}</h2><p>0.1.0-dev.7 · MapLibre GL JS · vis.js · Three.js</p><a href="${esc(encodeState(target(s, 'licenses')))}">${m.licenses}</a></div>`;
+            $('page').innerHTML = `<div class="reading"><p class="eyebrow">${m.about}</p><h1>${m.subtitle}</h1><p class="lede">${s.language === 'de' ? 'Ein offener Atlas für Geschichte, Gesellschaften und ihre Verbindungen.' : 'An open atlas of history, societies and their connections.'}</p>${isDemo() ? `<p>${m.demoText}</p>` : ''}<h2>${m.sourceVersion}</h2><code>${esc(provider.catalog.dataReleaseId)}</code><p>${provider.catalog.files.length} ${s.language === 'de' ? 'Dateien mit SHA-256-Prüfsummen' : 'files with SHA-256 checksums'}</p><h2>${m.engineVersion}</h2><p>0.1.0-dev.8 · MapLibre GL JS · vis.js · Three.js</p><a href="${esc(encodeState(target(s, 'licenses')))}">${m.licenses}</a></div>`;
         if (s.view === 'licenses') {
             const text = await fetch(new URL('licenses/THIRD_PARTY_NOTICES.md', document.baseURI)).then(r => r.text());
             const rights = await provider.items(provider.catalog.licenseInventory);

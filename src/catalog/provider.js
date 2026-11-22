@@ -5,6 +5,7 @@ import recordSchema from '../../schemas/0.1.0/record.schema.json' with { type: '
 import { legacyMembers } from '../query/chapters.js';
 import { contentURL } from '../domain/paths.js';
 import { bboxOverlap, rankSearch, temporalMatch, matchesTypes } from '../query/query.js';
+import { excludedVariants, mapLayer, mapPortrayal } from '../domain/cartography.js';
 const ajv = new Ajv2020({ strict: false });
 addFormats(ajv);
 const validConfig = ajv.compile(configSchema), validCatalog = ajv.compile(catalogSchema), validRecord = ajv.compile(recordSchema);
@@ -68,7 +69,7 @@ export class StaticProvider {
                 throw new Error('CATALOG_DUPLICATE: ' + f.path);
             paths.add(f.path);
         }
-        if (p.catalog.requiredCapabilities.some(c => !['geo-basic', 'historical-time', 'network-basic', 'model-viewer', 'script-samples', 'deep-time', 'natural-history', 'image-viewer', 'genetic-relationships'].includes(c)))
+        if (p.catalog.requiredCapabilities.some(c => !['geo-basic', 'historical-time', 'network-basic', 'model-viewer', 'script-samples', 'deep-time', 'natural-history', 'image-viewer', 'genetic-relationships', 'migration-maps'].includes(c)))
             throw new Error('CAPABILITY_UNSUPPORTED');
         p.sourceKey = p.config.instanceId + '-' + (await digest(new TextEncoder().encode(p.catalogURL.href))).slice(0, 12);
         const e = p.catalog.entrypoints;
@@ -98,6 +99,10 @@ export class StaticProvider {
     }
     chaptersFor(id, chapters) { return this.index.chapters.filter(ch => (!chapters || chapters.includes(ch.id)) && this.memberships.get(ch.id)?.has(id)); }
     scopedRecords(chapters) { return Object.fromEntries(Object.entries(this.index.records).filter(([id])=>this.belongs(id,chapters))); }
+    async interpretationGroups(chapters) {
+        const ids=Object.entries(this.index.records).filter(([id,m])=>m.kind==='interpretation' && this.belongs(id,chapters)).map(([id])=>id);
+        return Promise.all(ids.map(id=>this.getRecord(id)));
+    }
     async bytes(path) {
         const f = this.catalog.files.find(f => f.path === path);
         if (!f)
@@ -166,24 +171,18 @@ export class StaticProvider {
     }
     async features(viewport, f) {
         const features = [];
-        const excluded = new Set();
-        for (const [groupId, chosen] of Object.entries(f.interpretations)) {
-            const group = await this.getRecord(groupId);
-            if (group.kind !== 'interpretation' || !group.memberIds.includes(chosen))
-                throw new Error('INTERPRETATION_INVALID: ' + groupId);
-            for (const id of group.memberIds)
-                if (id !== chosen)
-                    excluded.add(id);
-        }
+        const groups = await this.interpretationGroups(f.chapters);
+        const excluded = excludedVariants(groups, f.interpretations);
         for (const s of this.spatial) {
             if (excluded.has(s.recordId) || !this.include(s.recordId, f) || !this.times[s.recordId]?.possible || viewport && !bboxOverlap(s.bbox, viewport))
                 continue;
             const r = await this.getRecord(s.recordId);
-            const layer = r.kind === 'assertion' ? r.predicate : 'events';
+            const layer = mapLayer(r,s);
             if (!f.layers.includes(layer))
                 continue;
             const geometry = JSON.parse(new TextDecoder().decode(await this.bytes(s.path)));
-            features.push({ ...geometry, id: s.recordId, properties: { recordId: s.recordId, geometryId: s.geometryId, role: s.role, layer, uncertain: !this.times[s.recordId].certain || 'epistemic' in r && r.epistemic.status !== 'attested' } });
+            const group=groups.find(g=>g.memberIds.includes(r.id));
+            features.push({ ...geometry, id: s.recordId, properties: { recordId: s.recordId, geometryId: s.geometryId, role: s.role, direction:s.direction ?? '', portrayal:mapPortrayal(r,s), variant:group?group.memberIds.indexOf(r.id)+1:0, layer, uncertain: !this.times[s.recordId].certain || 'epistemic' in r && r.epistemic.status !== 'attested' } });
         }
         return { type: 'FeatureCollection', features };
     }

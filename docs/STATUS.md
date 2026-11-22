@@ -1,4 +1,4 @@
-# Development status · 0.1.0-dev.7
+# Development status · 0.1.0-dev.8
 
 2026-11-22. First executable slice; M0, M1, M2 and M3 are **not yet complete**.
 
@@ -36,7 +36,7 @@ The authoring UI imported the committed content sources (214 selected files) for
 - Full index payload schemas, large-content scheduling, search weighting and performance measurements.
 - WebGL2 MapLibre/Three.js checks, models anchored on the globe, horizon/polar/dateline behavior and measured 200 m/CSS-pixel zoom.
 - Extended public GitHub Raw media and large-payload hosting tests; the small historical sample does not establish large-payload compatibility.
-- Full 18-case browser acceptance, narrow-screen/touch checks, focus/scroll restoration, complete filter UI, chapter steps, interpretation selection UI and timeline range gestures.
+- Full 18-case browser acceptance, narrow-screen/touch checks, focus/scroll restoration, complete filter UI and timeline range gestures.
 - Independent historical review of all research drafts and a reviewed historical release. Shared package reuse is now exercised by the maritime chapters; no synthetic fixture enters the content repository.
 
 The two additional voyage drafts and panel controls were explicitly requested to evaluate navigation with multiple chapters. The remaining M0/M1 gaps are still open; this addition does not establish general historical-release or large-library readiness.
@@ -50,3 +50,7 @@ The chapter-explorer branch also adds separate 10k/100k discovery benchmarks. Me
 ## Genetic relationships · dev.7
 
 Two typed predicates distinguish ancestry in a taxonomic lineage from kinship between sampled individuals. Specific evidence and an explanatory note are required; spatial routes and territorial extents are rejected. The compiler derives the capability and the viewer accepts it. No dependencies or installation steps were added. All 39 native browser test groups passed, including positive/indexed and negative genetics cases. Existing chapter behavior is retained. Independent historical review and GPU rendering remain outside these tests.
+
+## Migration maps · dev.8
+
+Added explicit directional movement geometry, independent migration/landscape layers, dated land/ice snapshots, event alternatives with comparison links, and chapter exploration steps. Both globe renderers consume the same semantic features. Empty comparison choices persist through reload. No animation, coastline interpolation, dependency installation or historical content is introduced into the engine. Browser validation results are recorded in `tests/browser/RESULTS.md`; GPU and independent historical review remain outstanding.

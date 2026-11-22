@@ -54,7 +54,8 @@
           "deep-time",
           "natural-history",
           "image-viewer",
-          "genetic-relationships"
+          "genetic-relationships",
+          "migration-maps"
         ]
       },
       "minItems": 0,
