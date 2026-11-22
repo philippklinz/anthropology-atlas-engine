@@ -1992,6 +1992,10 @@
                   "type": "string",
                   "minLength": 1
                 }
+              },
+              "assetId": {
+                "type": "string",
+                "pattern": "^asset:[a-z0-9]+(?:-[a-z0-9]+)*$"
               }
             },
             "required": [
@@ -2236,7 +2240,7 @@
               "natural-history",
               "image-viewer",
               "genetic-relationships",
-          "migration-maps"
+              "migration-maps"
             ]
           },
           "minItems": 0,

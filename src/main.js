@@ -86,7 +86,7 @@ function renderControls(s, ch) {
     layout.sync(m);
     timeline.update(s);
 }
-function prose(text) { return text.split(/\n\s*\n/).map(p => p.startsWith('# ') ? `<h2>${esc(p.slice(2))}</h2>` : p.startsWith('## ') ? `<h3>${esc(p.slice(3))}</h3>` : `<p>${esc(p).replace(/\n/g, '<br>')}</p>`).join(''); }
+function prose(text) { return text.split(/\n\s*\n/).map(p => p.startsWith('# ') ? `<h2>${esc(p.slice(2))}</h2>` : p.startsWith('## ') ? `<h3>${esc(p.slice(3))}</h3>` : `<p>${esc(p).replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>')}</p>`).join(''); }
 
 function citations(s, r) {
     const m = messages[s.language];
@@ -130,11 +130,12 @@ async function detail(s, ch, ids, groups=[]) {
     if (r.kind === 'chapter') {
         const file = r.textFiles[s.language] ?? Object.values(r.textFiles)[0], text = new TextDecoder().decode(await provider.bytes(file));
         const sections = text.split(/\n\s*\n/);
-        const intro = sections.splice(0, /^#\s/.test(sections[0]) ? 2 : 1).join('\n\n');
-        const heroId = r.focusIds.find(id=>provider.index.records[id]?.assetType === 'image');
-        const hero = heroId ? await figure(s,await provider.getRecord(heroId)) : ''; 
+        if (/^#\s/.test(sections[0])) sections.shift();
+        const intro = sections.shift() ?? '';
         const step=r.steps?.find(step=>step.id===s.step);
-        return `${common}<h1>${esc(localized(r.labels, s.language))}</h1><div class="chapter-text intro">${prose(intro)}</div>${step?.summary?`<p class="note">${esc(localized(step.summary,s.language))}</p>`:''}${variants}${hero}<h2>${m.explore}</h2>${recordList(s, r.focusIds)}<div class="chapter-text">${prose(sections.join('\n\n'))}</div><details class="metadata"><summary>${m.results} · ${ids.length}</summary>${recordList(s, ids)}</details>${citations(s, r)}${isDemo() ? `<div class="note">${m.demoText}</div>` : ''}`;
+        const heroId = step ? step.assetId : r.focusIds.find(id=>provider.index.records[id]?.assetType === 'image');
+        const hero = heroId ? await figure(s,await provider.getRecord(heroId)) : ''; 
+        return `${common}<h1>${esc(localized(r.labels, s.language))}</h1>${step?.summary?`<p class="note">${esc(localized(step.summary,s.language))}</p>`:''}${variants}<div class="chapter-text intro">${prose(intro)}</div>${hero}<h2>${m.explore}</h2>${recordList(s, r.focusIds)}<div class="chapter-text">${prose(sections.join('\n\n'))}</div><details class="metadata"><summary>${m.results} · ${ids.length}</summary>${recordList(s, ids)}</details>${citations(s, r)}${isDemo() ? `<div class="note">${m.demoText}</div>` : ''}`;
     }
     let body = '';
     if ('time' in r)

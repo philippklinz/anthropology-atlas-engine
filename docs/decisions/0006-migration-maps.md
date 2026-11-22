@@ -34,7 +34,7 @@ The viewer displays only time-matching snapshots and reports when none is visibl
 
 ## Chapter steps
 
-Existing `steps` now support localized `labels` and `summary`. IDs are unique. Each step can supply the existing `initialState` shape (camera, time, layers). Selecting a step changes these together and uses the existing URL `step` parameter. Overview restores the chapter initial state. Explicit URL time/camera/layers override the step defaults; short direct links use them. Changing the time manually clears the step label. Panning retains it. Steps do not remove other selected chapters or turn off independent evidence.
+Existing `steps` now support localized `labels` and `summary`. IDs are unique. Optional `assetId` selects a local image for that step; without it a step shows no unrelated overview illustration. Each step can supply the existing `initialState` shape (camera, time, layers). Selecting a step changes these together and uses the existing URL `step` parameter. Overview restores the chapter initial state. Explicit URL time/camera/layers override the step defaults; short direct links use them. Changing the time manually clears the step label. Panning retains it. Steps do not remove other selected chapters or turn off independent evidence.
 
 The compiler puts steps and default interpretation choices into the lazy discovery index, so a direct link can resolve them before full content loads. No new external dependencies or server are introduced. Authoring-toolkit copies must include `src/domain/cartography.js`.
 

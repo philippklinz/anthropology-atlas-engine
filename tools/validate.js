@@ -186,6 +186,7 @@ export async function validate(workspace, profile) {
                 if (group?.kind !== 'interpretation' || !group.memberIds.includes(c.recordId ?? c.assertionId))
                     fail('INTERPRETATION_CHOICE', 'Choice must be a member of its interpretation');
             }
+            for (const step of r.steps??[]) if(step.assetId && records.get(step.assetId)?.assetType !== 'image') fail('CHAPTER_STEP_ASSET','Step illustrations must reference an image');
             if (new Set((r.steps??[]).map(s=>s.id)).size !== (r.steps??[]).length) fail('CHAPTER_STEP','Step IDs must be unique');
             for (const p of r.modelPlacements ?? []) {
                 const a = records.get(p.assetId), g = records.get(p.anchorGeometryId);

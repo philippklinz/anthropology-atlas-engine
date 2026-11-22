@@ -53,7 +53,8 @@ test('Migration validation rejects invented direction, undated landscapes and un
  ['assertions/extent-of/demo-land.json',r=>r.time={kind:'interval',start:at(1295),end:at(1296),endMeaning:'ended'},'LANDSCAPE_SNAPSHOT'],
  ['assertions/extent-of/demo-land.json',r=>r.sourceRefs=[],'LANDSCAPE_EVIDENCE'],
  ['interpretations/demo-routes.json',r=>r.memberIds[0]='event:demo-journey','INTERPRETATION_MEMBER'],
- [chapterPath,r=>r.steps.push(r.steps[0]),'CHAPTER_STEP']
+ [chapterPath,r=>r.steps.push(r.steps[0]),'CHAPTER_STEP'],
+ [chapterPath,r=>r.steps[0].assetId='asset:demo-model','CHAPTER_STEP_ASSET']
  ]){const {work}=await migrationFixture();const r=JSON.parse(await work.readFile(file,'utf8'));mutate(r);work.set(file,JSON.stringify(r));assert.ok((await validate(work,'fixture')).issues.some(i=>i.code===code),code);}
 });
 test('Selecting a route preserves independent evidence; snapshots never fill temporal gaps',async()=>{
