@@ -510,7 +510,7 @@ Eine spätere Redaktionsoberfläche erzeugt validierte Dateiänderungen beziehun
 
 Der Atlas öffnet direkt in einer sinnvollen Kapitelansicht mit einem sichtbaren Thema, Zeitbezug und räumlichen Ausschnitt. Die Kapitelbeschreibung erklärt in wenigen Sätzen, was hier untersucht wird. Eine vorgeschaltete Marketingseite ist keine Voraussetzung zum Erkunden.
 
-Auf dem Desktop steht links eine dunkle Navigation mit Kapiteln und Ebenen. Die Karte füllt die Mitte; oben stehen Suche und Sprache, unten die Zeitleiste. Rechts öffnet sich bei Auswahl ein Detailbereich. Das Netz ersetzt bei Bedarf die zentrale Kartenfläche oder erscheint als ausdrücklich gewählter Vergleich. Ein 3D-Objekt öffnet einen klar begrenzten Betrachter mit Rückkehr zum vorherigen Zustand.
+Die dunkle Navigation mit Kapiteln, Objekttypen und Ebenen öffnet sich über den Menüknopf als linke Überlagerung. Sie schiebt den Seiteninhalt nicht zusammen und verändert weder Kartenbreite noch Kamera. Ein Schließen-Knopf, Escape, die abgedunkelte Fläche und die normale Auswahl eines Links schließen sie. Der Tastaturfokus bleibt währenddessen im Menü und kehrt beim Schließen zum Menüknopf zurück; modifizierte Linkklicks behalten ihre Browserfunktion. Die Karte füllt die Mitte; oben stehen Suche und Sprache, unten die Zeitleiste. Rechts öffnet sich bei Auswahl ein Detailbereich. Das Netz ersetzt bei Bedarf die zentrale Kartenfläche oder erscheint als ausdrücklich gewählter Vergleich. Ein 3D-Objekt öffnet einen klar begrenzten Betrachter mit Rückkehr zum vorherigen Zustand.
 
 Die linke Navigation ist ein **Navigationsbaum**, keine Behauptung, dass das Wissen selbst ein Baum sei. Ein Objekt kann in mehreren redaktionellen Einstiegen erscheinen und behält dabei dieselbe ID. Historische Mehrfachzugehörigkeit wird im Netz und in den Details sichtbar.
 
@@ -555,6 +555,8 @@ Das Beziehungsnetz beginnt mit dem gewählten Objekt und einem begrenzten direkt
 Die Standardansicht begrenzt sich auf etwa 60 Knoten. Weitere Nachbarn werden bewusst aufgeklappt; ab 200 Knoten verlangt die UI zusätzliche Filter oder eine Zusammenfassung. Physiksimulation stabilisiert sich und wird anschließend angehalten. Es gibt keine permanent zitternde Gesamtwolke als Einstieg.
 
 Die Zeitleiste zeigt die zum Kontext gehörenden Ereignisse und Zustände. Ein Punktcursor bezeichnet eine gewählte Zeiteinheit; der sichtbare Ausschnitt der Zeitleiste ist nicht automatisch ein historischer Filter. Wiedergabe ist opt-in, pausierbar und stoppt bei manueller Navigation. Datenlücken werden nicht durch unbelegte Übergänge gefüllt.
+
+Die Höhe des Zeitleistenbereichs lässt sich an seiner oberen Griffleiste mit Maus oder Zeiger verändern. Pfeil hoch/runter verändert sie per Tastatur; Home/End wählen die Grenzen, Doppelklick die Standardhöhe. Mindesthöhen für Zeitsteuerung, Zeitleiste und Kartenbereich bleiben erhalten. Die Höhe wird nach Möglichkeit lokal gespeichert und an die Fensterhöhe angepasst. Menüöffnung und Panelhöhe sind Darstellungspräferenzen: Sie erzeugen keine Browser-History-Einträge und verändern weder historische Filter noch geteilte URLs. Beim Kapitelwechsel übernimmt die Zeitleiste den neuen Zeitbereich, auch wenn dieser innerhalb des bisherigen Ausschnitts liegt.
 
 ### 11.5 Schmale Bildschirme und Alternativansichten
 

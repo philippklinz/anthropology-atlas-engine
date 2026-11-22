@@ -40,5 +40,5 @@ export class AtlasMap {
     setCamera(c) { this.setting = true; this.map.jumpTo({ center: [c.longitude, c.latitude], zoom: this.zoom(c), bearing: c.bearing ?? 0, pitch: c.pitch ?? 0 }); this.setting = false; }
     setFeatures(f, selected) { this.pending = f; this.selected = selected; if (!this.ready)
         return; this.map.getSource('historical').setData(f); this.map.setFilter('selection', ['==', ['get', 'recordId'], selected ?? '']); }
-    resize() { this.map.resize(); }
+    resize() { const previous = this.setting; this.setting = true; try { this.map.resize(); } finally { this.setting = previous; } }
 }

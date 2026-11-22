@@ -16,3 +16,29 @@
 .empty-catalog .nav-section{display:none}
 
 .directory-link{display:flex;justify-content:space-between;align-items:center;gap:8px;color:#d1dcd7;text-decoration:none;font-size:14px;line-height:1.4;padding:7px 9px;border-left:2px solid transparent}.directory-link:hover{background:#30433e}.directory-link.active{background:#233f3c;border-left-color:#30bbae;color:white}.directory-count{font:11px var(--font-metadata);color:#b2c7bd;border:1px solid #54655b;border-radius:3px;padding:1px 5px;min-width:24px;text-align:center}.directory details{margin-top:8px}.directory summary{font-size:13px;color:#b9cac3;cursor:pointer;padding:7px 10px}.nav-hint{color:#a7b5b1;font-size:12px;padding:9px;margin:0}.waypoints{padding-left:22px}.waypoints li{padding:7px 0}.waypoints .date-label{display:block;font-size:12px}.nav-section{padding:16px 0}.brand-subtitle{margin-bottom:20px}.chapter-text h2{display:block}.sidebar-bottom span{overflow-wrap:anywhere}
+
+/* Panels share the viewport. The drawer never takes a grid column. */
+.atlas-shell{grid-template-columns:minmax(0,1fr);grid-template-rows:66px minmax(0,1fr) var(--timeline-height,232px);height:100dvh;min-height:0}
+#topbar{grid-column:1;grid-row:1}
+#main{grid-column:1;grid-row:2;min-width:0}
+#timebar{grid-column:1;grid-row:3;display:flex;flex-direction:column;min-height:0;position:relative}
+#time-controls{flex:0 0 auto}
+#timeline{flex:1 1 0;height:auto;min-height:0;overflow:hidden}
+#timeline-resizer{height:14px;flex:0 0 14px;display:flex;align-items:center;justify-content:center;cursor:ns-resize;touch-action:none;background:#edf2ee;border-bottom:1px solid #cdd7ce;position:relative;z-index:5}
+#timeline-resizer span{width:54px;height:4px;border-radius:3px;background:#859b91;pointer-events:none}
+#timeline-resizer:hover,#timeline-resizer:focus-visible{background:#cee5dd;outline:2px solid var(--color-selection);outline-offset:-2px}
+.timeline-resizing,.timeline-resizing *{cursor:ns-resize!important;user-select:none!important}
+#menu-button{display:flex;align-items:center;gap:9px;flex-shrink:0;font-size:20px;background:transparent;border:1px solid #cdd7ce;padding:5px 10px}
+.menu-label{font-size:14px}
+#sidebar{position:fixed;inset:0 auto 0 0;width:min(320px,90vw);display:flex;z-index:31;padding-top:22px;box-shadow:6px 0 30px #0004;transform:translateX(-100%);visibility:hidden;transition:transform .2s ease;overscroll-behavior:contain}
+#sidebar.open{transform:translateX(0);visibility:visible}
+.sidebar-heading{position:relative;flex-shrink:0}
+.sidebar-heading .brand{padding-right:36px}
+#menu-close{position:absolute;right:-6px;top:-6px;color:#e5eee8;background:transparent;border:0;font-size:28px;line-height:1;padding:6px 10px;min-height:40px}
+#menu-close:hover{background:#30433e}
+#menu-backdrop{position:fixed;inset:0;width:100%;height:100%;padding:0;border:0;border-radius:0;z-index:30;background:#102a2238;cursor:default}
+@media(max-width:850px){
+  #topbar{position:relative;gap:8px}#menu-button{padding:5px 8px}.menu-label{display:none}
+  #main{overflow:auto;grid-template-rows:minmax(220px,45dvh) auto;align-content:start}.stage{min-height:220px}
+  #timebar{position:relative}#time-controls{height:auto;min-height:76px;flex-wrap:wrap;gap:8px;padding:8px 12px}
+}

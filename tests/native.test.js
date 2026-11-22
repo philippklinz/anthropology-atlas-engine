@@ -61,6 +61,70 @@ test('Local MapLibre worker starts and processes the actual land GeoJSON without
   try{await Promise.race([(async()=>{await dispatcher.broadcast('SL',[]);const data=await fetch('../basemap/land.geojson').then(r=>r.json());assert.ok(data.features.length>0);const results=await dispatcher.broadcast('LD',{type:'geojson',source:'land-test',geojsonVtOptions:{},data});assert.equal(results.length,1);assert.ok(!results[0].abandoned)})(),new Promise((_,reject)=>{timeout=setTimeout(()=>reject(new Error('MapLibre worker timeout')),15000)})]);}finally{clearTimeout(timeout);}
 });
 
+async function layoutFixture(storage) {
+  const {AtlasLayout}=await import('../src/ui/layout.js');
+  const shell=document.createElement('div');
+  shell.style.cssText='height:600px;width:900px;position:relative';
+  shell.innerHTML='<button id="menu-backdrop" hidden></button><aside id="sidebar"><button id="menu-close">Close</button><a href="#fixture">Chapter</a></aside><header id="topbar" style="height:66px"><button id="menu-button">Menu</button></header><main id="main"></main><footer id="timebar"><div id="timeline-resizer" tabindex="0"></div><div id="time-controls" style="height:76px"></div><div id="timeline"></div></footer>';
+  document.body.append(shell);
+  const controller=new AtlasLayout(shell,()=>{},storage);
+  controller.sync({openNavigation:'Open',closeNavigation:'Close',resizeTimeline:'Height',resizeTimelineHint:'Drag'});
+  controller.apply();
+  return {shell,controller,get:id=>shell.querySelector('#'+id),destroy:()=>{controller.destroy();shell.remove()}};
+}
+test('Drawer controls hide inactive navigation, contain focus and preserve modified link clicks',async()=>{
+  const f=await layoutFixture({getItem:()=>null,setItem:()=>{}});
+  try {
+    assert.ok(f.get('sidebar').inert);
+    f.get('menu-button').click();
+    assert.equal(f.get('menu-button').getAttribute('aria-expanded'),'true');
+    assert.equal(f.get('sidebar').getAttribute('aria-modal'),'true');
+    assert.ok(f.get('main').inert);assert.equal(document.activeElement,f.get('menu-close'));
+    f.get('menu-close').dispatchEvent(new KeyboardEvent('keydown',{key:'Tab',shiftKey:true,bubbles:true,cancelable:true}));
+    assert.equal(document.activeElement,f.get('sidebar').querySelector('a'));
+    const anchor=f.get('sidebar').querySelector('a');
+    anchor.addEventListener('click',e=>e.preventDefault());
+    anchor.dispatchEvent(new MouseEvent('click',{button:0,ctrlKey:true,bubbles:true,cancelable:true}));
+    assert.ok(f.controller.open);
+    document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}));
+    assert.ok(!f.controller.open);assert.ok(!f.get('main').inert);assert.equal(document.activeElement,f.get('menu-button'));
+    f.get('menu-button').click();f.get('menu-backdrop').click();assert.ok(!f.controller.open);
+    f.get('menu-button').click();anchor.click();assert.ok(!f.controller.open);
+  } finally {f.destroy()}
+});
+test('Timeline panel keyboard resize is bounded, persistent and independent of navigation history',async()=>{
+  let saved=null;
+  const f=await layoutFixture({getItem:()=>null,setItem:(key,value)=>{saved=value}}),before=location.href;
+  try {
+    const grip=f.get('timeline-resizer'),initial=f.controller.actualHeight;
+    grip.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowUp',bubbles:true,cancelable:true}));
+    assert.equal(f.controller.actualHeight,initial+24);assert.equal(Number(saved),initial+24);
+    grip.dispatchEvent(new KeyboardEvent('keydown',{key:'End',bubbles:true,cancelable:true}));
+    assert.equal(f.controller.actualHeight,354);
+    f.shell.style.height='420px';f.controller.apply();assert.equal(f.controller.actualHeight,174);
+    f.shell.style.height='800px';f.controller.apply();assert.equal(f.controller.actualHeight,354);
+    grip.dispatchEvent(new KeyboardEvent('keydown',{key:'Home',bubbles:true,cancelable:true}));
+    assert.equal(f.controller.actualHeight,170);assert.equal(grip.getAttribute('aria-valuenow'),'170');
+    assert.equal(location.href,before);
+  } finally {f.destroy()}
+  const blocked=await layoutFixture({getItem:()=>{throw Error('blocked')},setItem:()=>{throw Error('blocked')}});
+  try {blocked.controller.save();assert.ok(blocked.controller.actualHeight>0)} finally {blocked.destroy()}
+});
+test('Switching chapter resets the timeline window even when the new dates fit inside the old view',async()=>{
+  const {AtlasTimeline}=await import('../src/timeline/timeline.js');
+  const {yearRange}=await import('../src/domain/time.js');
+  const box=document.createElement('div');box.style.cssText='height:200px;width:900px';document.body.append(box);
+  const p={times:{},index:{records:{}}};
+  const a={language:'de',chapter:'chapter:wide-fixture',time:{from:yearRange(1300).from,to:yearRange(1350).to}};
+  const b={...a,chapter:'chapter:narrow-fixture',time:{from:yearRange(1320).from,to:yearRange(1321).to}};
+  const t=new AtlasTimeline(box,p,a,()=>{},()=>{});
+  try {
+    const wide=t.timeline.getWindow();t.update(b);const narrow=t.timeline.getWindow();
+    assert.ok(narrow.end-narrow.start<(wide.end-wide.start)/5);
+    box.style.height='340px';t.resize();assert.equal(box.querySelector('.vis-timeline').style.height,'100%');
+  } finally {t.destroy();box.remove()}
+});
+
 test('Relative local-clone profile loads an empty published catalogue',async()=>{
   const c={configVersion:'1',instanceId:'local-clone-test',defaultLanguage:'de',content:{mode:'bundled',catalogUrl:'./empty-content/catalog.json',updatePolicy:'on-reload'}};
   const p=await StaticProvider.open(c,new URL('./',location.href));assert.equal(p.catalog.entrypoints.defaultChapterId,null);assert.deepEqual(p.index.chapters,[]);assert.equal(Object.keys(p.index.records).length,0);

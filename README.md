@@ -1,6 +1,6 @@
 # Anthropology Atlas Engine
 
-An open, static atlas of people, places and connections through time. Development version 0.1.0-dev.3. The default content source offers a small, sourced historical research draft about the first circumnavigation (1519–1522).
+An open, static atlas of people, places and connections through time. Development version 0.1.0-dev.4. The default content source offers three sourced historical research drafts: Columbus's first voyage (1492–1493), the first circumnavigation (1519–1522), and Darwin's Beagle voyage (1831–1836).
 
 ## Run and configure
 
@@ -9,6 +9,8 @@ Clone or copy this repository into your web server and open its URL. **No Node.j
 Edit **[atlas.config.json](atlas.config.json)** to select the content installation. Default: `philippklinz/anthropology-atlas-content`, branch `main`, `published/catalog.json`. Another repository, branch, own host or local clone served by HTTP works through the same catalogue format. See [configuration examples and Pages instructions](docs/CONFIGURATION.md).
 
 Open the atlas normally for the historical chapter. Chapters and the **Browse by type** directory are separate: people, communities, events, places, objects and sources have their own counted lists. Empty categories remain under “More categories”. Category links work independently of the map date and preserve browser history.
+
+**Menu** opens the dark navigation over the page without shrinking the map. Close it with ×, Escape, a backdrop click or a normal navigation link. Drag the grip above the timeline upward for more room. It also supports Up/Down, Home/End and double-click to reset. Timeline height is an optional local preference; neither resizing nor opening the menu changes the historical URL or browser history.
 
 The explicitly fictional technical fixture is only available at **`?demo=1`** for software checks. It links back to the normal historical atlas. Empty content sources still get a welcome view. Use an HTTP(S) URL, not `file://`.
 
