@@ -100,7 +100,7 @@ async function locationLink(s, record) {
 
 async function detail(s, ch, ids) {
     const m = messages[s.language], r = s.id ? await provider.getRecord(s.id) : ch;
-    const common = isDemo() ? `<p class="badge">${m.demo}</p><p><a href="./">${s.language === 'de' ? 'Zu den historischen Inhalten' : 'Open historical content'}</a></p>` : r.editorial.status === 'draft' ? `<p class="badge">${m.researchDraft}</p>` : '';
+    const common = isDemo() ? `<p class="badge">${m.demo}</p><p><a href="./">${s.language === 'de' ? 'Zu den historischen Inhalten' : 'Open historical content'}</a></p>` : r.editorial?.status === 'draft' ? `<p class="badge">${m.researchDraft}</p>` : '';
     if (!ch.id && !s.id) return emptyDetail(s);
     if (r.kind === 'chapter') {
         const file = r.textFiles[s.language] ?? Object.values(r.textFiles)[0], text = new TextDecoder().decode(await provider.bytes(file));
