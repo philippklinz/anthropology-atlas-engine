@@ -112,7 +112,7 @@ async function locationLink(s, record) {
 
 function rightsLabel(rights) {
     const code=esc(rights.license);
-    const licenses = {'CC-BY-2.5':'by/2.5', 'CC-BY-SA-2.0':'by-sa/2.0', 'CC-BY-SA-3.0':'by-sa/3.0', 'CC-BY-SA-4.0':'by-sa/4.0'};
+    const licenses = {'CC-BY-4.0':'by/4.0', 'CC-BY-2.5':'by/2.5', 'CC-BY-SA-2.0':'by-sa/2.0', 'CC-BY-SA-3.0':'by-sa/3.0', 'CC-BY-SA-4.0':'by-sa/4.0'};
     return licenses[rights.license] ? `<a href="https://creativecommons.org/licenses/${licenses[rights.license]}/" target="_blank" rel="noopener noreferrer">${code}</a>` : code;
 }
 async function figure(s, asset, full=false) {

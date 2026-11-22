@@ -2,7 +2,7 @@
 
 Accepted 2026-11-22 following the project owner's navigation feedback.
 
-The first visit opens a chapter explorer. Visitors search or filter by period, region, topic and overlapping dates, select chapters, and open the atlas. An explicit atlas/object URL bypasses this entry screen. The explorer shows available content, not a claim of complete world-history coverage. Period labels are content-owned, regional and potentially overlapping.
+The first visit opens a chapter explorer. Visitors search or filter by period, region, topic and overlapping dates, select chapters, and open the atlas. An explicit atlas/object URL bypasses this entry screen. The explorer shows available content, not a claim of complete world-history coverage. Period labels are content-owned, regional and potentially overlapping. Time groups are selected through the period filter only; the result area shows chapter cards without a duplicate period-tile row. Related chapters reuse broad time groups instead of creating a time group for each chapter. The selected group's explanation remains visible above the results.
 
 `state.chapters` is the selected reading scope; `state.chapter` is the focused chapter. Changing focus preserves selection, time and camera. The sidebar lists only selected chapters, in chronological order. “Edit selection” returns to discovery with the choice retained. Opening the selection fits its full time range; a separate time reset restores that range later. The directory and its counts cover selected chapter members across all dates. Map and network queries additionally apply map-time filters. Timeline items cover the full selected reading scope; multiple chapters get labelled groups. A shared object has one identity and multiple chapter badges.
 
