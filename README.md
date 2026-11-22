@@ -1,6 +1,6 @@
 # Anthropology Atlas Engine
 
-An open, static atlas of people, places and connections through time. Development version 0.1.0-dev.2; the supplied demo is explicitly fictional.
+An open, static atlas of people, places and connections through time. Development version 0.1.0-dev.3. The default content source offers a small, sourced historical research draft about the first circumnavigation (1519–1522).
 
 ## Run and configure
 
@@ -8,7 +8,9 @@ Clone or copy this repository into your web server and open its URL. **No Node.j
 
 Edit **[atlas.config.json](atlas.config.json)** to select the content installation. Default: `philippklinz/anthropology-atlas-content`, branch `main`, `published/catalog.json`. Another repository, branch, own host or local clone served by HTTP works through the same catalogue format. See [configuration examples and Pages instructions](docs/CONFIGURATION.md).
 
-The default content repo starts empty. The engine does not silently replace it with fictitious history. Open **`?demo=1`** for the separately labelled technical demo. Use an HTTP(S) URL, not `file://`.
+Open the atlas normally for the historical chapter. Chapters and the **Browse by type** directory are separate: people, communities, events, places, objects and sources have their own counted lists. Empty categories remain under “More categories”. Category links work independently of the map date and preserve browser history.
+
+The explicitly fictional technical fixture is only available at **`?demo=1`** for software checks. It links back to the normal historical atlas. Empty content sources still get a welcome view. Use an HTTP(S) URL, not `file://`.
 
 ## Content tools and tests
 

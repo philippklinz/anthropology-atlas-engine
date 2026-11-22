@@ -65,3 +65,40 @@ test('Relative local-clone profile loads an empty published catalogue',async()=>
   const c={configVersion:'1',instanceId:'local-clone-test',defaultLanguage:'de',content:{mode:'bundled',catalogUrl:'./empty-content/catalog.json',updatePolicy:'on-reload'}};
   const p=await StaticProvider.open(c,new URL('./',location.href));assert.equal(p.catalog.entrypoints.defaultChapterId,null);assert.deepEqual(p.index.chapters,[]);assert.equal(Object.keys(p.index.records).length,0);
 });
+
+test('Directory categories count record kinds and search across years without hiding relationships',async()=>{
+  const {categoryCounts,directoryState}=await import('../src/ui/directory.js');
+  const {searchFilters,target}=await import('../src/state/state.js');
+  const config=await fetch('../atlas.config.json').then(r=>r.json());config.content=config.demo;
+  const p=await StaticProvider.open(config,new URL('../',location.href));
+  const chapter=await p.getRecord(p.catalog.entrypoints.defaultChapterId);
+  const s=defaultState(chapter,p.sourceKey,p.catalog.dataReleaseId);
+  const counts=categoryCounts(p.index.records);
+  const placeEdges=(await p.relations('place:demo-port-a',filters(s))).items;
+  assert.ok(placeEdges.some(e=>e.event && e.predicate==='event-location' && e.to==='place:demo-port-a'));
+  const journey=structuredClone(await p.getRecord('event:demo-journey'));delete journey.placeIds;p.records.set(journey.id,journey);
+  const waypointEdges=(await p.relations(journey.id,filters(s))).items.filter(e=>e.predicate==='waypoint');
+  assert.deepEqual(waypointEdges.map(e=>e.to).sort(),['place:demo-port-a','place:demo-port-b']);
+  assert.equal(counts.find(c=>c.key==='events').count,1);
+  assert.equal(counts.find(c=>c.key==='people').count,1);
+  const browse=directoryState({...s,time:{year:2000}},['event']);
+  const decoded=decodeState(encodeState(browse),s,p.index.chapters).state;
+  assert.deepEqual(decoded,normalizeState(browse));
+  assert.equal((await p.search('',searchFilters(decoded),'de')).items.length,1);
+  assert.equal((await p.search('',filters(decoded),'de')).items.length,0);
+  const person=target(directoryState(s,['person']),'entity','person:demo-traveller');
+  assert.deepEqual(person.types,[]);
+  assert.ok((await p.relations(person.id,filters(person))).items.length>0);
+  assert.throws(()=>decodeState('#/v1/search?scope=surprise',s),/URL_FILTER/);
+});
+test('Chapter intervals survive navigation and original calendar dates remain visible',async()=>{
+  const {formatTime,normalizeTime}=await import('../src/domain/time.js');
+  const date=(year,month,day)=>({earliest:{year,month,day},latest:{year,month,day},precision:'day',qualifier:'exact'});
+  const ch=structuredClone(emptyContext);ch.id='chapter:sample';ch.initialState.time={kind:'interval',start:date(1500,1,1),end:date(1503,12,31),endMeaning:'ended'};
+  const s=defaultState(ch,'s','r');assert.deepEqual(s.time,normalizeTime(ch.initialState.time).possible);
+  assert.deepEqual(decodeState(encodeState(s),s,[ch]).state,normalizeState(s));
+  const instant={kind:'instant',at:{...date(1500,3,20),original:{text:'10.3.1500',calendar:'julian',conversionNote:'+10 days'}}};
+  assert.equal(formatTime(instant,'de'),'10.3.1500 (julianisch)');
+  assert.equal(formatTime(instant,'en'),'10.3.1500 (Julian)');
+  assert.equal(formatTime(instant,'de',false),'20.3. 1500 n. Chr.');
+});

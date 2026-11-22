@@ -14,3 +14,5 @@
 .empty-catalog #timebar,.empty-catalog #layers-form,.empty-catalog .view-tabs a:nth-child(2),.empty-catalog #reset{display:none}
 .atlas-shell.empty-catalog{grid-template-rows:66px 1fr}
 .empty-catalog .nav-section{display:none}
+
+.directory-link{display:flex;justify-content:space-between;align-items:center;gap:8px;color:#d1dcd7;text-decoration:none;font-size:14px;line-height:1.4;padding:7px 9px;border-left:2px solid transparent}.directory-link:hover{background:#30433e}.directory-link.active{background:#233f3c;border-left-color:#30bbae;color:white}.directory-count{font:11px var(--font-metadata);color:#b2c7bd;border:1px solid #54655b;border-radius:3px;padding:1px 5px;min-width:24px;text-align:center}.directory details{margin-top:8px}.directory summary{font-size:13px;color:#b9cac3;cursor:pointer;padding:7px 10px}.nav-hint{color:#a7b5b1;font-size:12px;padding:9px;margin:0}.waypoints{padding-left:22px}.waypoints li{padding:7px 0}.waypoints .date-label{display:block;font-size:12px}.nav-section{padding:16px 0}.brand-subtitle{margin-bottom:20px}.chapter-text h2{display:block}.sidebar-bottom span{overflow-wrap:anywhere}

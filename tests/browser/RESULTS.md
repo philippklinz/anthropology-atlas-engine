@@ -1,3 +1,21 @@
+# Historical sample and directory observations · 2026-11-22 · 0.1.0-dev.3
+
+The default historical sample is maintained in the content repo, not engine fixtures. Browser authoring validated 48 records from 61 files with zero errors/warnings and exported draft-912feca6745a8f341943 from committed source 3814f2f7d39f4c646e301bef4a3a2d5b15fb98ad. Payload hashes pass the optional Python check.
+
+Twenty native browser test groups pass, including the new directory/kind filtering and original-calendar/interval cases. Manual Chromium checks on the static preview verified:
+
+- Historical chapter loads with its full 1519–1522 range, local globe, schematic route and dated points.
+- Counts: 4 people, 1 community, 12 events, 9 places, 1 artifact, 1 assertion, 8 sources; empty categories remain accessible with a clear no-data explanation.
+- Person directory → Magellan → browser Back → directory → Forward → Magellan; relationships remain visible after leaving a type filter.
+- Event → map-centering action → DE/EN → reload preserves selected event, camera, time and language.
+- Journey shows 11 ordered waypoint entries; Mactan opens the place and linked event; vis-network creates its canvas for the place focus.
+- A source detail links to its recorded external publication. Julian source date labels are visible without replacing the normalized calculation dates.
+- Selecting year 2000 does not hide catalogue-wide event directory entries: all 12 remain listed and the scope is explained.
+
+WebGL2 remains unavailable in this environment. The screenshots use SVG fallback; no new claim of GPU or mobile acceptance is made. Historical draft/source reading is documented in the content repo and is not an independent scholarly review.
+
+The following dev.2/dev.1 notes are retained as dated observations.
+
 # Native distribution observations · 2026-11-22 · 0.1.0-dev.2
 
 The preview serves repository files directly with an ordinary static server, without Node/npm/Vite. Eighteen checks at `tests/index.html` passed, including a real module worker that processes `basemap/land.geojson`; this worker test does not require WebGL. The authoring UI successfully imported the empty content ZIP, validated it and downloaded a draft catalogue ZIP. DE/EN UI remains available.

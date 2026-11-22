@@ -514,6 +514,14 @@ Auf dem Desktop steht links eine dunkle Navigation mit Kapiteln und Ebenen. Die 
 
 Die linke Navigation ist ein **Navigationsbaum**, keine Behauptung, dass das Wissen selbst ein Baum sei. Ein Objekt kann in mehreren redaktionellen Einstiegen erscheinen und behält dabei dieselbe ID. Historische Mehrfachzugehörigkeit wird im Netz und in den Details sichtbar.
 
+### 11.1a Verzeichnis nach Objekttyp
+
+Kapitel und Objekttypen sind getrennte Navigationszugänge. Unter „Nach Objekttyp“ werden Personen, Gemeinschaften, Ereignisse, Orte, Reiche, Organisationen, Sprachen, Schriften, Technik und weitere Vertragstypen mit Bestandszahlen angeboten. Gefüllte Kategorien stehen direkt im Menü; noch leere Kategorien bleiben unter „Weitere Bereiche“ erreichbar. Null bedeutet fehlende Einträge, nicht historische Abwesenheit.
+
+Kategorie-Links öffnen ein Verzeichnis des gesamten Inhaltsstands, unabhängig von der Kartenzeit. Dieser Umfang wird sichtbar erklärt und mit `scope=catalog` in der URL gespeichert; die Kartenzeit bleibt erhalten. Beim Öffnen eines Objekts aus diesem Verzeichnis endet dessen Typfilter, damit Beziehungen zu anderen Typen sichtbar bleiben. Zurück/Vorwärts und Sprachwechsel stellen Kategorie und Umfang wieder her. `scope=selection` behält die bisherige zeitgefilterte Suche. Kapitel mit Intervallzeit starten mit dem ganzen Zeitraum.
+
+Historische Entwürfe zeigen ihren Status offen. Originale Kalenderangaben bleiben in Details und Stationslisten lesbar; die normalisierten gregorianischen Rechendaten sind separat einsehbar. Historische Inhalte bleiben im Content-Repo, technische Fiktionen ausschließlich in der ausdrücklich gewählten Testdemo.
+
 ### 11.2 Zustand und Navigation
 
 `AtlasState` enthält mindestens:

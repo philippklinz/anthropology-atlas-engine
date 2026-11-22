@@ -1,10 +1,11 @@
 import { StaticProvider } from './catalog/provider.js';
+import { categoryCounts, activeCategory, directoryState } from './ui/directory.js';
 import { emptyContext } from './state/empty.js';
 import { Router } from './state/router.js';
-import { defaultState, encodeState, target, filters } from './state/state.js';
+import { defaultState, encodeState, target, filters, searchFilters } from './state/state.js';
 import { localized } from './query/query.js';
 import { formatTime, formatYear, calendarDate } from './domain/time.js';
-import { messages, typeLabels } from './i18n/messages.js';
+import { messages, typeLabels, eventRoleLabels } from './i18n/messages.js';
 import { AtlasMap } from './map/map.js';
 import { SvgGlobe } from './map/svg-globe.js';
 import { AtlasTimeline } from './timeline/timeline.js';
@@ -39,14 +40,17 @@ function chapterState(ch, s) { return { ...defaultState(ch, s.sourceKey, s.relea
 function renderControls(s, ch) {
     const m = messages[s.language], url = (view, id) => esc(encodeState(target(s, view, id)));
     const allLayers = [...new Set([...provider.spatial.map(x => provider.index.records[x.recordId]?.kind === 'event' ? 'events' : provider.index.records[x.recordId]?.type ?? ''), 'events'])].filter(Boolean);
+    const directory = categoryCounts(provider.index.records), category = s.view === 'search' ? activeCategory(s.types) : undefined;
+    const entry = c => `<a class="directory-link ${category?.key === c.key ? 'active' : ''}" ${category?.key === c.key ? 'aria-current="page"' : ''} href="${esc(encodeState(directoryState(s, c.types)))}"><span>${esc(c.labels[s.language === 'de' ? 0 : 1])}</span><span class="directory-count">${c.count}</span></a>`;
+    const directoryNav = `<nav class="nav-section directory" aria-label="${m.directory}"><span class="eyebrow">${m.directory}</span>${directory.filter(c => c.count > 0).map(entry).join('')}<details ${category && !directory.find(c => c.key === category.key)?.count ? 'open' : ''}><summary>${m.moreCategories}</summary>${directory.filter(c => c.count === 0).map(entry).join('')}<p class="nav-hint">${m.emptyCategories}</p></details></nav>`;
     const choices = provider.index.chapters.map(c => `<a class="chapter-link ${s.chapter === c.id ? 'active' : ''}" href="${esc(encodeState(chapterState(c, s)))}">${icon('book')}<span>${esc(localized(c.labels, s.language))}</span></a>`).join('');
-    $('sidebar').innerHTML = `<a class="brand" href="${url('map')}">${icon('globe')}<span>ANTHROPOLOGY<br><strong>ATLAS</strong></span></a><p class="brand-subtitle">${m.subtitle}</p><div class="nav-section"><span class="eyebrow">${m.chapters}</span>${choices}</div><div class="nav-section"><span class="eyebrow">${m.layers}</span><form id="layers-form">${allLayers.map(l => `<label class="layer"><input type="checkbox" name="layer" value="${esc(l)}" ${s.layers.includes(l) ? 'checked' : ''}><span class="layer-mark ${l === 'events' ? 'event' : l === 'trades-with' ? 'trade' : ''}"></span>${esc(l === 'events' ? (s.language === 'de' ? 'Reisen und Ereignisse' : 'Journeys and events') : localized(pred[l]?.labels, s.language) || l)}</label>`).join('')}</form></div><nav class="secondary-nav"><a href="${url('search')}">${icon('search')}${m.showAll}</a><a href="${url('about')}">${m.about}</a><a href="${url('licenses')}">${m.licenses}</a></nav><div class="sidebar-bottom"><span class="version">ENGINE 0.1.0-dev.2</span><span>${isDemo() ? m.demo : esc(provider.catalog.dataReleaseId)}</span></div>`;
+    $('sidebar').innerHTML = `<a class="brand" href="${url('map')}">${icon('globe')}<span>ANTHROPOLOGY<br><strong>ATLAS</strong></span></a><p class="brand-subtitle">${m.subtitle}</p><div class="nav-section"><span class="eyebrow">${m.chapters}</span>${choices}</div>${directoryNav}<div class="nav-section"><span class="eyebrow">${m.layers}</span><form id="layers-form">${allLayers.map(l => `<label class="layer"><input type="checkbox" name="layer" value="${esc(l)}" ${s.layers.includes(l) ? 'checked' : ''}><span class="layer-mark ${l === 'events' ? 'event' : l === 'trades-with' ? 'trade' : ''}"></span>${esc(l === 'events' ? (s.language === 'de' ? 'Reisen und Ereignisse' : 'Journeys and events') : localized(pred[l]?.labels, s.language) || l)}</label>`).join('')}</form></div><nav class="secondary-nav"><a href="${esc(encodeState(directoryState(s)))}">${icon('search')}${m.showAll}</a><a href="${url('about')}">${m.about}</a><a href="${url('licenses')}">${m.licenses}</a></nav><div class="sidebar-bottom"><span class="version">ENGINE 0.1.0-dev.3</span><span>${isDemo() ? m.demo : esc(provider.catalog.dataReleaseId)}</span></div>`;
     $('topbar').innerHTML = `<button id="menu-button" class="icon-button" aria-label="${m.navigation}">☰</button><div class="top-title"><span class="eyebrow">${m.explore}</span><strong>${esc(localized(ch.labels, s.language))}</strong></div><form id="search-form" role="search"><label class="sr-only" for="search-input">${m.search}</label>${icon('search')}<input id="search-input" name="q" value="${esc(s.query)}" placeholder="${m.search}"><button type="submit" aria-label="${m.searchButton}">${icon('search')}</button></form><nav class="language"><a href="${esc(encodeState({ ...s, language: 'de' }))}" ${s.language === 'de' ? 'aria-current="true"' : ''}>DE</a><a href="${esc(encodeState({ ...s, language: 'en' }))}" ${s.language === 'en' ? 'aria-current="true"' : ''}>EN</a></nav>`;
-    const focus = s.id && ['entity', 'network'].includes(s.view) ? s.id : ch.focusIds.find(id => provider.index.records[id]?.kind === 'entity');
+    const focus = s.id && ['entity', 'event', 'network'].includes(s.view) ? s.id : ch.focusIds.find(id => provider.index.records[id]?.kind === 'entity');
     $('map-tools').innerHTML = `<div class="view-tabs"><a class="${s.view !== 'network' && s.view !== 'model' ? 'active' : ''}" href="${url('map')}">${icon('globe')}${m.map}</a><a class="${s.view === 'network' ? 'active' : ''}" href="${url('network', focus)}">${icon('network')}${m.network}</a></div><div class="view-actions"><button id="world">${m.world}</button><button id="reset">${m.reset}</button><button id="copy" aria-label="${m.copy}">${icon('book')} <span>${m.copy}</span></button></div>`;
     $('map-caption').innerHTML = `<span>${m.basemap}</span><span>${m.globeHint}</span>`;
     $('layers-form').onchange = () => router.commit({ ...s, layers: [...$('layers-form').querySelectorAll('input:checked')].map(e => e.value) });
-    $('search-form').onsubmit = e => { e.preventDefault(); router.commit({ ...s, view: 'search', id: undefined, query: $('search-input').value }); };
+    $('search-form').onsubmit = e => { e.preventDefault(); router.commit({ ...directoryState(s), query: $('search-input').value }); };
     $('menu-button').onclick = () => $('sidebar').classList.toggle('open');
     $('world').onclick = () => router.commit({ ...s, view: 'map', id: undefined, camera: { longitude: 4, latitude: 35, metersPerPixel: 50000, bearing: 0, pitch: 0 } });
     $('reset').onclick = () => router.commit(chapterState(ch, s));
@@ -58,25 +62,50 @@ function renderControls(s, ch) {
     catch {
         $('announcer').textContent = s.language === 'de' ? 'Bitte die URL aus der Adresszeile kopieren.' : 'Copy the URL from the address bar.';
     } };
-    const year = 'year' in s.time ? s.time.year : calendarDate(s.time.from).year;
+    const year = 'year' in s.time ? s.time.year : calendarDate(s.time.from).year, rangeEnd = 'year' in s.time ? year : calendarDate(s.time.to - 1).year;
     if (!timeline) {
         $('timebar').innerHTML = '<div id="time-controls"></div><div id="timeline"></div>';
         timeline = new AtlasTimeline($('timeline'), provider, s, id => router.commit(target(router.state, viewFor(id), id)), year => formYear(router.state, year));
     }
-    $('time-controls').innerHTML = `<div><span class="eyebrow">${m.time}</span><strong class="current-year">${esc('year' in s.time ? formatYear(year, s.language) : m.range)}</strong></div><form id="year-form"><button type="button" id="previous" aria-label="${m.previous}">−</button><label class="sr-only" for="year">${m.year}</label><input id="year" type="number" min="1" max="10001" value="${year <= 0 ? 1 - year : year}" required><label class="sr-only" for="era">Era</label><select id="era"><option value="ce" ${year > 0 ? 'selected' : ''}>${m.ce}</option><option value="bce" ${year <= 0 ? 'selected' : ''}>${m.bce}</option></select><button type="submit">${m.apply}</button><button type="button" id="next" aria-label="${m.next}">+</button></form><p>${m.gap}</p>`;
+    $('time-controls').innerHTML = `<div><span class="eyebrow">${m.time}</span><strong class="current-year">${esc('year' in s.time ? formatYear(year, s.language) : `${year}–${rangeEnd}`)}</strong></div><form id="year-form"><button type="button" id="previous" aria-label="${m.previous}">−</button><label class="sr-only" for="year">${m.year}</label><input id="year" type="number" min="1" max="10001" value="${year <= 0 ? 1 - year : year}" required><label class="sr-only" for="era">Era</label><select id="era"><option value="ce" ${year > 0 ? 'selected' : ''}>${m.ce}</option><option value="bce" ${year <= 0 ? 'selected' : ''}>${m.bce}</option></select><button type="submit">${m.apply}</button><button type="button" id="next" aria-label="${m.next}">+</button></form><p>${m.gap}</p>`;
     $('year-form').onsubmit = e => { e.preventDefault(); const y = Number($('year').value); formYear(s, $('era').value === 'bce' ? 1 - y : y); };
     $('previous').onclick = () => formYear(s, year - 1);
     $('next').onclick = () => formYear(s, year + 1);
     timeline.update(s);
 }
 function prose(text) { return text.split(/\n\s*\n/).map(p => p.startsWith('# ') ? `<h2>${esc(p.slice(2))}</h2>` : p.startsWith('## ') ? `<h3>${esc(p.slice(3))}</h3>` : `<p>${esc(p).replace(/\n/g, '<br>')}</p>`).join(''); }
+
+function citations(s, r) {
+    const m = messages[s.language];
+    if (r.kind === 'source' && !r.sourceRefs.length) return '';
+    return `<h2>${m.sources}</h2>` + (r.sourceRefs.length ? `<ul class="citations">${r.sourceRefs.map(c => `<li>${link(s, c.sourceId)}<p>${esc(c.locator ?? '')}</p>${c.note ? `<p>${esc(localized(c.note, s.language))}</p>` : ''}</li>`).join('')}</ul>` : `<p class="muted">${m.noSources}</p>`);
+}
+async function locationLink(s, record) {
+    let spatial = record.spatial ?? [];
+    if (record.kind === 'entity' && record.entityType === 'place') {
+        for (const item of provider.spatial) {
+            const event = await provider.getRecord(item.recordId);
+            if (event.kind === 'event' && event.placeIds?.includes(record.id)) { spatial = event.spatial ?? []; break; }
+        }
+    }
+    const spot = spatial.find(x => x.role === 'location');
+    if (!spot) return '';
+    const geometry = await provider.getRecord(spot.geometryId);
+    if (geometry.kind !== 'geometry' || geometry.geometryType !== 'Point') return '';
+    const feature = JSON.parse(new TextDecoder().decode(await provider.bytes(geometry.file)));
+    const [longitude, latitude] = feature.geometry.coordinates;
+    const dest = { ...target(s, viewFor(record.id), record.id), camera: { longitude, latitude, metersPerPixel: 3000, bearing: 0, pitch: 0 } };
+    return `<p><a class="action-link" href="${esc(encodeState(dest))}">${icon('globe')}${messages[s.language].showOnMap}</a></p>`;
+}
+
 async function detail(s, ch, ids) {
     const m = messages[s.language], r = s.id ? await provider.getRecord(s.id) : ch;
-    const common = isDemo() ? `<p class="badge">${m.demo}</p>` : '';
+    const common = isDemo() ? `<p class="badge">${m.demo}</p><p><a href="./">${s.language === 'de' ? 'Zu den historischen Inhalten' : 'Open historical content'}</a></p>` : r.editorial?.status === 'draft' ? `<p class="badge">${m.researchDraft}</p>` : '';
     if (!ch.id && !s.id) return emptyDetail(s);
     if (r.kind === 'chapter') {
         const file = r.textFiles[s.language] ?? Object.values(r.textFiles)[0], text = new TextDecoder().decode(await provider.bytes(file));
-        return `${common}<h1>${esc(localized(r.labels, s.language))}</h1><p class="lede">${s.language === 'de' ? 'Wie verbinden sich Orte, Menschen und Wissen über Raum und Zeit?' : 'How do places, people and knowledge connect across space and time?'}</p><div class="chapter-text">${prose(text)}</div><h2>${m.explore}</h2>${recordList(s, r.focusIds)}<h2>${m.results} <span class="count">${ids.length}</span></h2>${recordList(s, ids)}${isDemo() ? `<div class="note">${m.demoText}</div>` : ''}`;
+        const [intro, ...sections] = text.split(/\n\s*\n/);
+        return `${common}<h1>${esc(localized(r.labels, s.language))}</h1><div class="chapter-text intro">${prose(intro)}</div><h2>${m.explore}</h2>${recordList(s, r.focusIds)}<div class="chapter-text">${prose(sections.join('\n\n'))}</div><details class="metadata"><summary>${m.results} · ${ids.length}</summary>${recordList(s, ids)}</details>${citations(s, r)}${isDemo() ? `<div class="note">${m.demoText}</div>` : ''}`;
     }
     let body = '';
     if ('time' in r)
@@ -85,8 +114,13 @@ async function detail(s, ch, ids) {
         body += `<p class="lede">${esc(localized(r.summary, s.language))}</p>`;
     if (r.kind === 'assertion')
         body += `<div class="relationship">${link(s, r.subjectId)}<span>${esc(localized(pred[r.predicate]?.labels, s.language))}</span>${link(s, r.objectId)}</div><p class="note">${r.epistemic.status === 'attested' ? m.attested : m.uncertain}</p>`;
-    if (r.kind === 'event')
-        body += `<h2>${m.relations}</h2>${recordList(s, r.participants.map(p => p.entityId))}${r.note ? `<p>${esc(localized(r.note, s.language))}</p>` : ''}`;
+    if (r.kind === 'event') {
+        body += `${r.note ? `<p class="lede">${esc(localized(r.note, s.language))}</p>` : ''}<h2>${m.participants}</h2>${`<ul class="record-list">${r.participants.map(p => `<li>${link(s, p.entityId)}<span>${esc(eventRoleLabels[p.role]?.[s.language === 'de' ? 0 : 1] ?? p.role)}</span></li>`).join('')}</ul>`}`;
+        if (r.waypoints?.length) body += `<h2>${m.stations}</h2><ol class="waypoints">${r.waypoints.map(w => `<li>${w.placeId ? link(s, w.placeId) : link(s, w.geometryId)}<span class="date-label">${esc(formatTime(w.time, s.language))}</span></li>`).join('')}</ol>`;
+        if (r.parentEventId) body += `<p>${m.partOfJourney}: ${link(s, r.parentEventId)}</p>`;
+    }
+    const mapLink = await locationLink(s, r);
+    if (mapLink) body += mapLink;
     if (r.kind === 'entity') {
         const edges = (await provider.relations(r.id, filters(s))).items;
         body += `<a class="action-link" href="${esc(href(s, r.id, 'network'))}">${icon('network')}${m.network}</a><h2>${m.relations}</h2>${recordList(s, [...new Set(edges.map(e => e.id))])}`;
@@ -104,11 +138,9 @@ async function detail(s, ch, ids) {
         if (r.bibliographicNote)
             body += `<p>${esc(r.bibliographicNote)}</p>`;
     }
-    body += `<h2>${m.sources}</h2>`;
-    body += r.sourceRefs.length ? `<ul class="citations">${r.sourceRefs.map(c => `<li>${link(s, c.sourceId)}<p>${esc(c.locator ?? '')} ${esc(c.role)}</p></li>`).join('')}</ul>` : `<p class="muted">${m.noSources}</p>`;
-    if (ids.length)
-        body += `<h2>${m.results}</h2>${recordList(s, ids)}`;
-    return `<a class="back-link" href="${esc(encodeState(target(s, 'map')))}">${m.close}</a>${common}<span class="eyebrow">${esc(typeLabels[r.kind === 'entity' ? r.entityType : r.kind]?.[s.language === 'de' ? 0 : 1] ?? r.kind)}</span><h1>${esc(label(r.id, s.language))}</h1>${body}<details class="metadata"><summary>${m.details}</summary><code>${esc(r.id)}</code><p>${esc(r.editorial.status)}</p><a href="${esc(href(s, r.id))}">${m.copy}</a></details>`;
+    body += citations(s, r);
+
+    return `<a class="back-link" href="${esc(encodeState(target(s, 'map')))}">${m.close}</a>${common}<span class="eyebrow">${esc(typeLabels[r.kind === 'entity' ? r.entityType : r.kind]?.[s.language === 'de' ? 0 : 1] ?? r.kind)}</span><h1>${esc(label(r.id, s.language))}</h1>${body}<details class="metadata"><summary>${m.details}</summary><code>${esc(r.id)}</code><p>${esc(r.editorial.status)}</p>${r.editorial.note ? `<p>${esc(localized(r.editorial.note, s.language))}</p>` : ''}${'time' in r ? `<p>${m.normalizedTime}: ${esc(formatTime(r.time, s.language, false))}</p>` : ''}<a href="${esc(href(s, r.id))}">${m.copy}</a></details>`;
 }
 async function render(s, warnings) {
     const current = ++generation, active = () => current === generation, m = messages[s.language];
@@ -140,7 +172,7 @@ async function render(s, warnings) {
             return;
         $('detail').innerHTML = content;
         $('detail').scrollTop = 0;
-        document.title = `${s.id ? label(s.id, s.language) : m[s.view === 'search' ? 'search' : s.view === 'licenses' ? 'licenses' : s.view === 'about' ? 'about' : 'atlas']} · ${m.atlas}`;
+        document.title = `${s.id ? label(s.id, s.language) : (s.view === 'search' && activeCategory(s.types)?.labels[s.language === 'de' ? 0 : 1]) || m[s.view === 'search' ? 'search' : s.view === 'licenses' ? 'licenses' : s.view === 'about' ? 'about' : 'atlas']} · ${m.atlas}`;
         network?.destroy();
         network = undefined;
         disposeModel?.();
@@ -196,15 +228,16 @@ async function render(s, warnings) {
             disposeModel = dispose;
         }
         if (s.view === 'search') {
-            const result = await provider.search(s.query, filters(s), s.language);
+            const result = await provider.search(s.query, searchFilters(s), s.language);
             if (!active())
                 return;
-            $('page').innerHTML = `<div class="reading"><p class="eyebrow">${m.search}</p><h1>${esc(s.query || m.showAll)}</h1><p>${result.items.length} ${m.results}</p>${result.items.length ? recordList(s, result.items.map(x => x.id)) : `<p>${m.noResults}</p>`}${result.nextCursor ? `<button id="more">${m.more}</button>` : ''}</div>`;
+            const category = activeCategory(s.types);
+            $('page').innerHTML = `<div class="reading"><p class="eyebrow">${m.directory}</p><h1>${esc(s.query || category?.labels[s.language === 'de' ? 0 : 1] || m.showAll)}</h1><p class="muted">${s.searchScope === 'catalog' ? m.catalogScope : m.selectionScope}</p><p>${result.items.length}${result.nextCursor ? '+' : ''} ${m.results}</p>${result.items.length ? recordList(s, result.items.map(x => x.id)) : `<p>${m.noResults}</p><p class="muted">${m.emptyCategories}</p>`}${result.nextCursor ? `<button id="more">${m.more}</button>` : ''}</div>`;
             let cursor = result.nextCursor;
             if (cursor)
                 $('more').onclick = async () => { if (!cursor)
                     return; const button = $('more'); button.disabled = true; try {
-                    const next = await provider.search(s.query, filters(s), s.language, cursor);
+                    const next = await provider.search(s.query, searchFilters(s), s.language, cursor);
                     if (active()) {
                         button.insertAdjacentHTML('beforebegin', recordList(s, next.items.map(x => x.id)));
                         cursor = next.nextCursor;
@@ -221,7 +254,7 @@ async function render(s, warnings) {
                 } };
         }
         if (s.view === 'about')
-            $('page').innerHTML = `<div class="reading"><p class="eyebrow">${m.about}</p><h1>${m.subtitle}</h1><p class="lede">${s.language === 'de' ? 'Ein offener Atlas für Geschichte, Gesellschaften und ihre Verbindungen.' : 'An open atlas of history, societies and their connections.'}</p>${isDemo() ? `<p>${m.demoText}</p>` : ''}<h2>${m.sourceVersion}</h2><code>${esc(provider.catalog.dataReleaseId)}</code><p>${provider.catalog.files.length} ${s.language === 'de' ? 'Dateien mit SHA-256-Prüfsummen' : 'files with SHA-256 checksums'}</p><h2>${m.engineVersion}</h2><p>0.1.0-dev.2 · MapLibre GL JS · vis.js · Three.js</p><a href="${esc(encodeState(target(s, 'licenses')))}">${m.licenses}</a></div>`;
+            $('page').innerHTML = `<div class="reading"><p class="eyebrow">${m.about}</p><h1>${m.subtitle}</h1><p class="lede">${s.language === 'de' ? 'Ein offener Atlas für Geschichte, Gesellschaften und ihre Verbindungen.' : 'An open atlas of history, societies and their connections.'}</p>${isDemo() ? `<p>${m.demoText}</p>` : ''}<h2>${m.sourceVersion}</h2><code>${esc(provider.catalog.dataReleaseId)}</code><p>${provider.catalog.files.length} ${s.language === 'de' ? 'Dateien mit SHA-256-Prüfsummen' : 'files with SHA-256 checksums'}</p><h2>${m.engineVersion}</h2><p>0.1.0-dev.3 · MapLibre GL JS · vis.js · Three.js</p><a href="${esc(encodeState(target(s, 'licenses')))}">${m.licenses}</a></div>`;
         if (s.view === 'licenses') {
             const text = await fetch(new URL('licenses/THIRD_PARTY_NOTICES.md', document.baseURI)).then(r => r.text());
             if (!active())
