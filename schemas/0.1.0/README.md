@@ -36,3 +36,7 @@ Calendar years now accept -1000000 through 2100. `timeEstimate` accepts the orig
 ## Genetic relationships (draft, dev.7)
 
 Two typed, cited predicates distinguish individual kinship from ancestry in a taxonomic lineage. See [decision 0005](../../docs/decisions/0005-genetic-relationships.md). The compiler derives `genetic-relationships`; older engines reject that capability. Existing records need no migration.
+
+## Migration maps · development revision dev.8
+
+Explicit route direction, migration-event alternatives, dated land/ice polygon snapshots and labelled chapter steps are covered by `migration-maps`. See [decision 0006](../../docs/decisions/0006-migration-maps.md) for the authoring contract, semantics, examples and limits. The compiler derives this capability rather than trusting package declarations. Positive and negative executable examples are in `tests/migrations.test.js`. Existing assertion choices and undirected voyage geometry remain supported.

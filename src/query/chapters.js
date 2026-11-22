@@ -64,5 +64,5 @@ export function openChapters(s, chapters) {
         time: ranges.length ? {from:Math.min(...ranges.map(r=>r.from)),to:Math.max(...ranges.map(r=>r.to))} : s.time,
         camera:selected.length === 1 ? focused.initialState.camera : {longitude:-20,latitude:20,metersPerPixel:30000,bearing:0,pitch:0},
         layers:[...new Set(selected.flatMap(c=>[...c.initialState.layers,'events','located-at']))],
-        interpretations:Object.assign({},...selected.map(c=>Object.fromEntries((c.interpretationChoices??[]).map(x=>[x.interpretationId,x.assertionId]))))};
+        interpretations:Object.assign({},...selected.map(c=>Object.fromEntries((c.interpretationChoices??[]).map(x=>[x.interpretationId,(x.recordId ?? x.assertionId)]))))};
 }

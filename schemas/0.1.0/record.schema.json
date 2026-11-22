@@ -296,7 +296,16 @@
               "route",
               "connection",
               "findspot",
-              "uncertainty-area"
+              "uncertainty-area",
+              "land-reconstruction",
+              "ice-reconstruction"
+            ]
+          },
+          "direction": {
+            "enum": [
+              "forward",
+              "reverse",
+              "both"
             ]
           }
         },
@@ -1672,7 +1681,7 @@
           "items": {
             "type": "string",
             "minLength": 1,
-            "pattern": "^assertion:[a-z0-9]+(?:-[a-z0-9]+)*$"
+            "pattern": "^(?:assertion|event):[a-z0-9]+(?:-[a-z0-9]+)*$"
           },
           "minItems": 2,
           "uniqueItems": true
@@ -1961,6 +1970,28 @@
               },
               "state": {
                 "$ref": "#/$defs/initialState"
+              },
+              "labels": {
+                "type": "object",
+                "minProperties": 1,
+                "propertyNames": {
+                  "pattern": "^[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)*$"
+                },
+                "additionalProperties": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "summary": {
+                "type": "object",
+                "minProperties": 1,
+                "propertyNames": {
+                  "pattern": "^[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)*$"
+                },
+                "additionalProperties": {
+                  "type": "string",
+                  "minLength": 1
+                }
               }
             },
             "required": [
@@ -1996,14 +2027,39 @@
                   "type": "string",
                   "minLength": 1
                 }
+              },
+              "recordId": {
+                "type": "string",
+                "pattern": "^(?:assertion|event):[a-z0-9]+(?:-[a-z0-9]+)*$"
               }
             },
             "required": [
               "interpretationId",
-              "assertionId",
               "reason"
             ],
-            "additionalProperties": false
+            "additionalProperties": false,
+            "oneOf": [
+              {
+                "required": [
+                  "assertionId"
+                ],
+                "not": {
+                  "required": [
+                    "recordId"
+                  ]
+                }
+              },
+              {
+                "required": [
+                  "recordId"
+                ],
+                "not": {
+                  "required": [
+                    "assertionId"
+                  ]
+                }
+              }
+            ]
           },
           "minItems": 1
         },
@@ -2179,7 +2235,8 @@
               "deep-time",
               "natural-history",
               "image-viewer",
-              "genetic-relationships"
+              "genetic-relationships",
+          "migration-maps"
             ]
           },
           "minItems": 0,

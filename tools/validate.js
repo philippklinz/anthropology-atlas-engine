@@ -5,6 +5,7 @@ import { normalizeTime, estimateRange } from '../src/domain/time.js';
 import { safeRelative } from '../src/domain/paths.js';
 import { validateGeometry } from './geometry.js';
 import { validateGLB, validateImage } from './assets.js';
+import { landscapeRoles } from '../src/domain/cartography.js';
 const schemas = new URL('../schemas/0.1.0/', import.meta.url);
 async function schema(name){const r=await fetch(new URL(name,schemas));if(!r.ok)throw new Error('SCHEMA_HTTP: '+r.status);return r.json();}
 export async function makeValidators() {
@@ -118,8 +119,12 @@ export async function validate(workspace, profile) {
                 if (g?.kind !== 'geometry')
                     throw new Error('SPATIAL_TYPE: geometry expected');
                 const role = String(value.role ?? 'location');
-                if (role === 'extent' && !g.geometryType.includes('Polygon') || ['route', 'connection'].includes(role) && !g.geometryType.includes('Line'))
+                if (['extent','uncertainty-area',...landscapeRoles].includes(role) && !g.geometryType.includes('Polygon') || ['route', 'connection'].includes(role) && !g.geometryType.includes('Line'))
                     throw new Error('SPATIAL_ROLE: geometry does not match ' + role);
+                if (value.direction && (role !== 'route' || r.kind !== 'event' || !['migration','journey','campaign'].includes(r.eventType)))
+                    throw new Error('ROUTE_DIRECTION: direction requires an explicitly authored movement route');
+                if (landscapeRoles.includes(role) && (r.kind !== 'assertion' || r.predicate !== 'extent-of' || r.time.kind !== 'instant'))
+                    throw new Error('LANDSCAPE_SNAPSHOT: land and ice reconstructions require a dated extent-of snapshot');
             }
         }));
         if (r.kind === 'assertion')
@@ -135,10 +140,14 @@ export async function validate(workspace, profile) {
                     if (r.spatial?.some(s => s.role !== 'connection'))
                         throw new Error('GENETIC_SPATIAL: genetic relationships may have a connection, never a migration route or territorial extent');
                 }
-                if (r.predicate === 'extent-of' && !r.spatial?.some(s => s.role === 'extent'))
+                if (r.predicate === 'extent-of' && !r.spatial?.some(s => ['extent',...landscapeRoles].includes(s.role)))
                     throw new Error('SPATIAL_REQUIRED: extent-of requires an extent');
+                if (r.spatial?.some(s=>landscapeRoles.includes(s.role)) && !r.sourceRefs.some(c=>['supports','derivation'].includes(c.role)&&c.locator?.trim()))
+                    throw new Error('LANDSCAPE_EVIDENCE: cite the dated reconstruction');
             });
         if (r.kind === 'event') {
+            if (r.spatial?.some(s=>s.direction) && (!r.note || !r.sourceRefs.some(c=>['supports','derivation'].includes(c.role)&&c.locator?.trim())))
+                fail('ROUTE_EVIDENCE','Explain and cite the route direction, even for a draft');
             if (r.eventType === 'other' && !r.note)
                 fail('EVENT_NOTE', 'Other events need an explanation');
             for (const p of r.participants)
@@ -174,17 +183,19 @@ export async function validate(workspace, profile) {
             if (r.discovery && !r.recordIds) fail('CHAPTER_MEMBERSHIP', 'Discoverable chapters require explicit recordIds');
             for (const c of r.interpretationChoices ?? []) {
                 const group = records.get(c.interpretationId);
-                if (group?.kind !== 'interpretation' || !group.memberIds.includes(c.assertionId))
+                if (group?.kind !== 'interpretation' || !group.memberIds.includes(c.recordId ?? c.assertionId))
                     fail('INTERPRETATION_CHOICE', 'Choice must be a member of its interpretation');
             }
+            if (new Set((r.steps??[]).map(s=>s.id)).size !== (r.steps??[]).length) fail('CHAPTER_STEP','Step IDs must be unique');
             for (const p of r.modelPlacements ?? []) {
                 const a = records.get(p.assetId), g = records.get(p.anchorGeometryId);
                 if (a?.kind !== 'asset' || a.assetType !== 'model' || g?.kind !== 'geometry' || g.geometryType !== 'Point')
                     fail('PLACEMENT_TYPE', 'Model placements require a model asset and point anchor');
             }
         }
-        if (r.kind === 'interpretation' && r.memberIds.some(id => records.get(id)?.kind !== 'assertion'))
-            fail('INTERPRETATION_MEMBER', 'Interpretations contain assertions');
+        if (r.kind === 'interpretation' && r.memberIds.some(id => {
+            const member=records.get(id); return member?.kind !== 'assertion' && !(member?.kind === 'event' && member.eventType === 'migration');
+        })) fail('INTERPRETATION_MEMBER', 'Interpretations contain assertions or explicitly reconstructed migration events');
         if (profile === 'fixture' && !r.synthetic)
             fail('FIXTURE_MARKER', 'Every fixture record must be explicitly synthetic');
         if (profile === 'release') {

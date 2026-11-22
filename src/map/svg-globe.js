@@ -1,4 +1,6 @@
 import { geoOrthographic, geoPath } from '../../vendor/geo/geo.js';
+import { directedLines } from '../domain/cartography.js';
+import { featureStyle, paintOrder, routeStyle } from './portrayal.js';
 const SVG = 'http://www.w3.org/2000/svg';
 // d3's spherical polygon convention is clockwise; GeoJSON uses counterclockwise.
 function sphericalFeature(feature) {
@@ -83,7 +85,7 @@ export class SvgGlobe {
     }
     camera() { return { ...this.current }; }
     setCamera(c) { clearTimeout(this.timer); this.current = c; this.draw(); }
-    setFeatures(f, selected) { this.features = f.features.map(sphericalFeature); this.selected = selected; this.draw(); }
+    setFeatures(f, selected) { this.features = f.features.map(sphericalFeature).sort((a,b)=>paintOrder(a)-paintOrder(b)); this.selected = selected; this.draw(); }
     resize() { this.draw(); }
     draw() {
         const w = this.container.clientWidth, h = this.container.clientHeight;
@@ -94,7 +96,7 @@ export class SvgGlobe {
         const path = geoPath(this.projection), fragment = document.createDocumentFragment();
         const add = (d, fill, stroke, width = 1, recordId, dashed = false) => { if (!d)
             return; const el = document.createElementNS(SVG, 'path'); el.setAttribute('d', d); el.setAttribute('fill', fill); el.setAttribute('stroke', stroke); el.setAttribute('stroke-width', String(width)); if (dashed)
-            el.setAttribute('stroke-dasharray', '5 4'); if (recordId) {
+            el.setAttribute('stroke-dasharray', Array.isArray(dashed)?dashed.join(' '):'5 4'); if (recordId) {
             el.dataset.recordId = recordId;
             el.style.cursor = 'pointer';
         } fragment.append(el); };
@@ -104,7 +106,8 @@ export class SvgGlobe {
         for (const f of this.features) {
             const area = ['Polygon', 'MultiPolygon'].includes(f.geometry.type), point = f.geometry.type.includes('Point'), id = String(f.properties?.recordId), selected = id === this.selected;
             path.pointRadius(selected ? 8 : 5);
-            add(path(f), area ? '#009e9844' : point ? '#006f6b' : 'none', selected ? '#202325' : point ? 'white' : area ? '#00766d' : '#9e613f', selected ? 3 : point ? 2 : 1.8, id, !area && !point);
+            const style=featureStyle(f);
+            add(path(f),style.fill,selected?'#202325':style.stroke,selected?3:style.width,id,style.dash);
         }
         for (const f of this.features.filter(f=>String(f.properties?.recordId)===this.selected)) {
             const point=f.geometry.type.includes('Point'), area=f.geometry.type.includes('Polygon');
@@ -113,6 +116,23 @@ export class SvgGlobe {
             add(path(f),point?'#fff4db':'none','#ffffff',point?4:8,id);
             path.pointRadius(9);
             add(path(f),point?'#d67a2c':area?'#d67a2c44':'none','#87451c',point?2:4,id);
+        }
+        // Sample the already horizon-clipped SVG path, so arrows cannot leak
+        // from the far side of the globe or jump between clipped components.
+        for(const f of this.features) for(const coordinates of directedLines(f)) {
+            const d=path({type:'LineString',coordinates});if(!d)continue;
+            const measure=document.createElementNS(SVG,'path');measure.setAttribute('d',d);
+            const length=measure.getTotalLength();if(length<24)continue;
+            const count=Math.max(1,Math.floor(length/90));
+            for(let i=0;i<count;i++){
+                const position=length*(i+0.5)/count;
+                const a=measure.getPointAtLength(Math.max(0,position-2)),b=measure.getPointAtLength(Math.min(length,position+2));
+                if(Math.hypot(b.x-a.x,b.y-a.y)>10)continue;
+                const p=measure.getPointAtLength(position),angle=Math.atan2(b.y-a.y,b.x-a.x),c=Math.cos(angle),s=Math.sin(angle);
+                const points=[[7,0],[-5,-4],[-3,0],[-5,4]].map(([x,y])=>[p.x+x*c-y*s,p.y+x*s+y*c]);
+                add('M'+points.map(v=>v.join(',')).join('L')+'Z',routeStyle(f.properties.variant).color,'white',0.7,String(f.properties.recordId));
+                fragment.lastChild.setAttribute('data-direction-arrow','true');
+            }
         }
         this.svg.replaceChildren(fragment);
     }

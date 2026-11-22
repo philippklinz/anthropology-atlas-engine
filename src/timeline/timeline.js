@@ -53,9 +53,11 @@ export class AtlasTimeline {
     }
     items(state) {
         const language = state.language;
+        const excluded=new Set();
+        for(const [group,chosen] of Object.entries(state.interpretations??{})) for(const id of this.provider.records?.get(group)?.memberIds??[]) if(id!==chosen)excluded.add(id);
         const labels = vocabulary.predicates;
         return Object.entries(this.provider.times).flatMap(([id, t]) => {
-            if (!t.possible || (this.provider.belongs && !this.provider.belongs(id,state.chapters)))
+            if (excluded.has(id) || !t.possible || (this.provider.belongs && !this.provider.belongs(id,state.chapters)))
                 return [];
             const span = t.possible, el = document.createElement('span'), meta = this.provider.index.records[id];
             el.textContent = localized(meta?.labels, language) || localized(labels[meta?.type ?? '']?.labels, language) || id;
@@ -75,7 +77,7 @@ export class AtlasTimeline {
         this.assertions = new Map(Object.values(provider.edges ?? {}).flat().filter(e=>!e.event).map(e=>[e.id,e]));
         this.projection = this.projectionFor(state);
         this.language = state.language;
-        this.scope = JSON.stringify([state.chapters ?? [state.chapter],state.time]);
+        this.scope = JSON.stringify([state.chapters ?? [state.chapter],state.time,state.interpretations]);
         const data = this.items(state), window = windowFor(state,this.projection);
         const options = { height: '100%', rtl: false, showCurrentTime: false, stack: true, zoomable: true, moveable: true, selectable: true, editable: false, verticalScroll: true, min: this.projection.min, max: this.projection.max, zoomMin:this.projection.zoomMin, moment: (d) => moment.utc(d), tooltip: { followMouse: false }, showTooltips: true };
         // Function labels receive Moment values; custom BCE/CE labels avoid a visible year zero.
@@ -91,7 +93,7 @@ export class AtlasTimeline {
         this.timeline.on('timechanged', e => onYear(calendarDate(this.projection.fromDate(e.time)).year));
     }
     update(s) {
-        const scope=JSON.stringify([s.chapters ?? [s.chapter],s.time]);
+        const scope=JSON.stringify([s.chapters ?? [s.chapter],s.time,s.interpretations]);
         const next = this.projectionFor(s), changed = next.deep !== this.projection.deep;
         this.projection = next;
         this.timeline.setOptions({min:next.min,max:next.max,zoomMin:next.zoomMin,format:axisFormat(s.language,next)});
