@@ -32,3 +32,7 @@ Catalogues may add `entrypoints.discovery` and file role `discovery`. Older cata
 ## Deep-time and natural-history extension (draft, dev.6)
 
 Calendar years now accept -1000000 through 2100. `timeEstimate` accepts the original calendar shape or `ageEstimate` with `basis: years-before`, fixed `referenceYear: 1950`, integer `older`/`younger` ages, year precision, qualifier, and optional central age and uncertaintySigma. `time.kind: before` has `bound` and an explicitly unknown older limit. Null interval endpoints retain their earlier undated semantics. `specimen` and `taxon` are distinct entity types/namespaces. Raster image viewing supports validated JPEG, PNG and WebP payloads, not SVG/HTML. The compiler derives the corresponding capability flags even if a package omits them. See decision 0004 for normalization and compatibility.
+
+## Genetic relationships (draft, dev.7)
+
+Two typed, cited predicates distinguish individual kinship from ancestry in a taxonomic lineage. See [decision 0005](../../docs/decisions/0005-genetic-relationships.md). The compiler derives `genetic-relationships`; older engines reject that capability. Existing records need no migration.

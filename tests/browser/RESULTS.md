@@ -92,3 +92,7 @@ The pinned content toolkit exported `draft-8288a1394df57630badf` from source com
 Local HTTP viewing confirmed the short chapter link, three African map points, BP axis with compact ticks, uncertainty/open-start labels, and the scoped list of three natural specimens. Both 576-pixel-wide original images loaded from verified local payloads with their credits. The image route, DE/EN captions, browser Back/Forward, catalogue rights inventory, BP discovery filtering plus reload, chronological four-chapter listing, and combined deep-time/Darwin selection were exercised. Returning to Darwin alone restores 1831–1836 calendar labels. Introductory prose now precedes chapter links and media when a text begins with a heading.
 
 The environment reports WebGL2 unavailable; these observations use the SVG globe fallback. They do not verify MapLibre GPU rendering or constitute independent historical review.
+
+## Genetic relationship contract · 2026-11-22 · dev.7
+
+39/39 native browser test groups passed in Chromium through the managed static preview under `/qa/`. The genetics tests exercise directed ancestry, symmetric incoming/outgoing edges, derived capability, invalid taxonomic endpoints, reversed symmetry, missing citations/notes and disallowed migration routes. Static distribution and vendor-integrity checks passed. This does not constitute historical peer review or GPU globe validation.
