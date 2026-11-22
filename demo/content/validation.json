@@ -1,0 +1,14 @@
+{
+  "profile": "fixture",
+  "records": 39,
+  "errors": 0,
+  "warnings": 1,
+  "issues": [
+    {
+      "severity": "warning",
+      "code": "SYNTHETIC_DATASET",
+      "file": "dataset.json",
+      "message": "Technical fixture; no historical claims were reviewed"
+    }
+  ]
+}

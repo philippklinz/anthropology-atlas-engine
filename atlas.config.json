@@ -1,0 +1,19 @@
+{
+  "configVersion": "1",
+  "instanceId": "anthropology-atlas",
+  "defaultLanguage": "de",
+  "content": {
+    "mode": "github-raw",
+    "owner": "philippklinz",
+    "repository": "anthropology-atlas-content",
+    "branch": "main",
+    "catalogPath": "published/catalog.json",
+    "updatePolicy": "on-reload"
+  },
+  "demo": {
+    "mode": "bundled",
+    "catalogUrl": "./demo/content/catalog.json",
+    "expectedCatalogSha256": "f0d080b21fea42fb47066c102562b6e8541550659fd234807884889abf7e748c",
+    "updatePolicy": "pinned"
+  }
+}

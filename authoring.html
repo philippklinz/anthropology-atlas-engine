@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="de">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Atlas · Inhalte prüfen / Content tools</title><link rel="stylesheet" href="./tools/authoring.css"></head>
+<body><main>
+  <nav><a href="./index.html">Atlas</a><span>CONTENT TOOLS · 0.1.0-dev.2</span><button id="language">English</button></nav>
+  <h1 id="title">Inhalte prüfen und veröffentlichen</h1>
+  <p id="intro">Wähle deinen Content-Ordner oder ein ZIP. Die Dateien bleiben in deinem Browser.</p>
+  <section>
+    <h2 id="step-one">1 · Inhalte auswählen</h2>
+    <label><span id="folder-label">Content-Ordner (mit dataset.json)</span><input id="folder" type="file" webkitdirectory multiple></label>
+    <label><span id="zip-label">Alternativ: ZIP-Datei</span><input id="zip" type="file" accept=".zip,application/zip"></label>
+    <p id="selection" role="status"></p>
+  </section>
+  <section>
+    <h2 id="step-two">2 · Prüfen</h2>
+    <label><span id="profile-label">Prüfprofil</span><select id="profile"><option value="draft">draft · Entwurf</option><option value="release">release · Historische Veröffentlichung</option><option value="fixture">fixture · Synthetischer Testbestand</option></select></label>
+    <button id="validate" disabled>Inhalte prüfen</button>
+    <p id="review-note">Die Prüfung kontrolliert Struktur, Referenzen, Zeitangaben und Ressourcen. Sie ersetzt keine historische Quellenprüfung.</p>
+  </section>
+  <section>
+    <h2 id="step-three">3 · Katalog exportieren</h2>
+    <label><span id="revision-label">Vollständiger Git-Commit der ausgewählten Quelldaten</span><input id="revision" type="text" spellcheck="false" placeholder="40 hex characters" pattern="[a-f0-9]{40}"></label>
+    <p id="revision-note">Quelldaten zuerst committen. Das Werkzeug kann den Commit nicht selbst aus dem Ordner ermitteln. Prüfe die Zuordnung mit git rev-parse HEAD.</p>
+    <button id="compile" disabled>Prüfen und published.zip herunterladen</button>
+    <p id="publish-note">ZIP nach published/ im Content-Repo entpacken und committen. Der Atlas liest published/catalog.json. Bereits veröffentlichte Dateien unter published/files/ behalten, damit parallele Besucher ihren geladenen Datenstand fertig lesen können.</p>
+  </section>
+  <h2 id="result-title">Prüfbericht</h2><pre id="report" role="status" aria-live="polite">—</pre>
+  <footer><a href="./licenses/THIRD_PARTY_NOTICES.md">Open Source &amp; Lizenzen</a></footer>
+</main><script type="module" src="./tools/authoring.js"></script></body></html>

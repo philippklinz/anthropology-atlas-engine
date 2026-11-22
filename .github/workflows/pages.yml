@@ -1,5 +1,7 @@
-name: Publish synthetic demo to Pages
+name: Publish atlas files to Pages
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
@@ -16,16 +18,9 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '24.22.3'
-      - run: node tools/install-offline.mjs
-      - run: npm test
-      - run: npm run demo
-      - run: npm run build
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: .
       - id: deployment
         uses: actions/deploy-pages@v4

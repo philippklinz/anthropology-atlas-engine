@@ -1,0 +1,1 @@
+{"type":"Feature","id":"geometry:demo-dateline","geometry":{"type":"MultiLineString","coordinates":[[[179,10],[180,10]],[[-180,10],[-179,10]]]},"properties":{}}
