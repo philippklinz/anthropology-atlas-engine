@@ -11,16 +11,35 @@ concurrency:
   group: pages
   cancel-in-progress: false
 jobs:
+  upload:
+    runs-on: ubuntu-24.04
+    outputs:
+      artifact_name: ${{ steps.artifact-name.outputs.name }}
+    env:
+      ATLAS_PAGES_ARTIFACT: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the complete static distribution
+        run: python3 scripts/check-static.py
+      - uses: actions/configure-pages@v5
+      - name: Name this upload attempt
+        id: artifact-name
+        run: echo "name=$ATLAS_PAGES_ARTIFACT" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: ${{ env.ATLAS_PAGES_ARTIFACT }}
+          path: .
+
+  # A deployment retry reuses the completed upload instead of creating a
+  # second artifact. Keep its name from the upload job's original attempt.
   deploy:
+    needs: upload
     runs-on: ubuntu-24.04
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: .
       - id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          artifact_name: ${{ needs.upload.outputs.artifact_name }}
