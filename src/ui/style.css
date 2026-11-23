@@ -62,6 +62,15 @@
 
 .license-inventory li { margin:1rem 0; line-height:1.5; }
 
+.chapter-models { margin:20px 0 24px; }
+.chapter-models h2 { margin:0 0 10px; font-size:14px; }
+.model-card { display:flex; align-items:center; gap:12px; padding:14px; margin-top:8px; border:1px solid #aac7ba; border-left:3px solid var(--color-selection); border-radius:4px; background:#edf5f1; text-decoration:none; }
+.model-card:hover { background:#deeee7; }
+.model-card > svg { width:28px; height:28px; }
+.model-card > span { min-width:0; }
+.model-card strong { display:block; font-size:15px; line-height:1.4; overflow-wrap:anywhere; }
+.model-card-action { display:block; margin-top:4px; font-size:12px; line-height:1.4; color:#4b6156; }
+
 /* Small geographic controls; the underlying map remains the main view. */
 #map-context{position:absolute;top:76px;left:20px;z-index:2;width:min(300px,calc(100% - 74px));font-size:14px;pointer-events:none}
 #map-context>*{pointer-events:auto;background:#fffffff2;border:1px solid #c5d2c9;border-radius:4px;box-shadow:0 2px 7px #1232}

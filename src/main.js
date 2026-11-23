@@ -1,6 +1,7 @@
 import { ChapterSearch, chronological, openChapters } from './query/chapters.js';
 import { renderExplorer } from './ui/explorer.js';
 import { imageURL } from './ui/images.js';
+import { chapterModelLinks } from './ui/model-links.js';
 import { AtlasLayout } from './ui/layout.js';
 import { renderMapContext, interpretationPanel, layerLabels } from './ui/cartography.js';
 import { StaticProvider } from './catalog/provider.js';
@@ -135,7 +136,7 @@ async function detail(s, ch, ids, groups=[]) {
         const step=r.steps?.find(step=>step.id===s.step);
         const heroId = step ? step.assetId : r.focusIds.find(id=>provider.index.records[id]?.assetType === 'image');
         const hero = heroId ? await figure(s,await provider.getRecord(heroId)) : ''; 
-        return `${common}<h1>${esc(localized(r.labels, s.language))}</h1>${step?.summary?`<p class="note">${esc(localized(step.summary,s.language))}</p>`:''}${variants}<div class="chapter-text intro">${prose(intro)}</div>${hero}<h2>${m.explore}</h2>${recordList(s, r.focusIds)}<div class="chapter-text">${prose(sections.join('\n\n'))}</div><details class="metadata"><summary>${m.results} · ${ids.length}</summary>${recordList(s, ids)}</details>${citations(s, r)}${isDemo() ? `<div class="note">${m.demoText}</div>` : ''}`;
+        return `${common}<h1>${esc(localized(r.labels, s.language))}</h1>${step?.summary?`<p class="note">${esc(localized(step.summary,s.language))}</p>`:''}${variants}<div class="chapter-text intro">${prose(intro)}</div>${chapterModelLinks(s,r,provider.index)}${hero}<h2>${m.explore}</h2>${recordList(s, r.focusIds)}<div class="chapter-text">${prose(sections.join('\n\n'))}</div><details class="metadata"><summary>${m.results} · ${ids.length}</summary>${recordList(s, ids)}</details>${citations(s, r)}${isDemo() ? `<div class="note">${m.demoText}</div>` : ''}`;
     }
     let body = '';
     if ('time' in r)
@@ -148,6 +149,7 @@ async function detail(s, ch, ids, groups=[]) {
         if (explanation) body += `<p class="lede">${esc(localized(explanation, s.language))}</p>`;
     }
     if (r.kind === 'event') {
+        if (provider.belongs(r.id, [ch.id])) body += chapterModelLinks(s, ch, provider.index);
         const status={attested:['Belegt','Attested'],inferred:['Aus Belegen erschlossen','Inferred from evidence'],hypothetical:['Mögliche Rekonstruktion','Hypothetical reconstruction'],disputed:['In der Forschung umstritten','Disputed in research']}[r.epistemic.status];
         body+=`<p class="note">${esc(status?.[s.language==='de'?0:1])}${r.epistemic.note?` · ${esc(localized(r.epistemic.note,s.language))}`:''}</p>`;
         body += `${r.note ? `<p class="lede">${esc(localized(r.note, s.language))}</p>` : ''}<h2>${m.participants}</h2>${`<ul class="record-list">${r.participants.map(p => `<li>${link(s, p.entityId)}<span>${esc(eventRoleLabels[p.role]?.[s.language === 'de' ? 0 : 1] ?? p.role)}</span></li>`).join('')}</ul>`}`;

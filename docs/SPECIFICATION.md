@@ -706,6 +706,8 @@ Kartenlegenden erklären Farbe, Linie und Muster. Auswahl, Fokus, Unsicherheit u
 
 ### 13.1 Objektbetrachter
 
+Kapitelübersichten zeigen verfügbare 3D-Modelle als beschriftete, hervorgehobene Links unmittelbar nach der Einleitung. Die Ereignisansicht bietet dieselben Modelle unter „3D im Kapitel“ an, sofern das Ereignis zum fokussierten Kapitel gehört. Die Auswahl stammt ausschließlich aus den Modell-Assets dieses Kapitels; beim Anzeigen der Links wird keine Modelldatei geladen. Die Links erhalten Kapitelauswahl, Zeit und Kamera im URL-Zustand.
+
 Der Three.js-Betrachter lädt ein Asset erst bei Bedarf. V0.1 verwendet GLB mit Meter als räumlicher Einheit. Eine Datei wird nicht allein wegen ihrer Endung als vollständig eingebettet betrachtet: Der Build prüft Puffer, Texturen und Erweiterungen auf weitere Abhängigkeiten. Benötigte Decoder werden lokal mitgeliefert; nicht unterstützte Erweiterungen erzeugen einen Fehler.
 
 Der Viewer zeigt Objektname, Datierung, Maßstab soweit bekannt, Quelle und Einordnung als `scan`, `reconstruction` oder `symbol`. Ein frei konstruiertes Symbol ist keine maßgetreue Rekonstruktion. Das Asset kann eine belegte reale Größe angeben; ohne diese Angabe zeigt der Viewer keinen erfundenen Maßstab.

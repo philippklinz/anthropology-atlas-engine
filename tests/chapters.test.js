@@ -6,12 +6,30 @@ import {StaticProvider} from '../src/catalog/provider.js';
 import {selectionLayers} from '../src/map/selection.js';
 import {yearRange,normalizeTime} from '../src/domain/time.js';
 import {emptyContext} from '../src/state/empty.js';
+import {chapterModelIds,chapterModelLinks} from '../src/ui/model-links.js';
 import {buildContent} from '../tools/build.js';
 import {loadFixture} from '../tools/workspace.js';
 import {validate} from '../tools/validate.js';
 const at=y=>({earliest:{year:y,month:1,day:1},latest:{year:y,month:1,day:1},precision:'day',qualifier:'exact'});
 const make=(id,year,labels,terms=[])=>({...structuredClone(emptyContext),id,labels,initialState:{...structuredClone(emptyContext.initialState),time:{kind:'interval',start:at(year),end:at(year+1),endMeaning:'ended'}},discovery:{summary:{de:'Fiktive Prüfdaten'},periods:[{id:year<1500?'early':'late',labels:{de:year<1500?'Früher':'Später'}}],regions:[{id:'islands',labels:{de:'Inseln'}}],topics:[]},searchTerms:terms});
 const a=make('chapter:alpha',1400,{de:'Erste Reise',en:'First voyage'},['Person Álvarez','Mündung']),b=make('chapter:beta',1600,{de:'Zweite Reise',en:'Second voyage'},['Person Zwei']);
+test('Chapter model links stay scoped, include non-focus exhibits and preserve navigable view state',()=>{
+ const chapter={...a,focusIds:['asset:one','asset:image'],recordIds:['asset:one','asset:two','asset:image','person:one']};
+ const model=labels=>({kind:'asset',assetType:'model',labels});
+ const index={records:{'asset:one':model({de:'Erstes Modell',en:'First <model>'}),'asset:two':model({de:'Zweites Modell',en:'Second model'}),'asset:other':model({en:'Another chapter'}),'asset:image':{kind:'asset',assetType:'image'},'person:one':{kind:'entity'}}};
+ assert.deepEqual(chapterModelIds(chapter,index),['asset:one','asset:two']);
+ const state={...defaultState(a,'source','release','en'),chapters:[a.id,b.id],view:'event',id:'event:one',time:{year:1402}};
+ const container=document.createElement('div');container.innerHTML=chapterModelLinks(state,chapter,index);
+ const links=[...container.querySelectorAll('a')];assert.equal(links.length,2);
+ assert.ok(links[0].textContent.includes('First <model>'));assert.equal(container.querySelector('model'),null);
+ for(const [i,link] of links.entries()) {
+  const decoded=decodeState(link.getAttribute('href'),defaultState(a,'source','release'),[a,b]).state;
+  assert.equal(decoded.view,'model');assert.equal(decoded.id,['asset:one','asset:two'][i]);
+  assert.equal(decoded.language,'en');assert.deepEqual(decoded.chapters,state.chapters);
+  assert.deepEqual(decoded.time,state.time);assert.deepEqual(decoded.camera,state.camera);
+ }
+ assert.equal(chapterModelLinks(state,b,index),'');
+});
 test('Chapter discovery finds names and accents, intersects facets and dates, and bounds pages',()=>{
  const search=new ChapterSearch([b,a]);
  assert.deepEqual(search.query().items.map(x=>x.chapter.id),[a.id,b.id]);
