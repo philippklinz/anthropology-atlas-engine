@@ -2,6 +2,11 @@ import * as THREE from '../../vendor/three/three.module.js';
 import { GLTFLoader } from '../../vendor/three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from '../../vendor/three/addons/controls/OrbitControls.js';
 import { SVGRenderer } from '../../vendor/three/addons/renderers/SVGRenderer.js';
+
+function isPoint(value) {
+    return Array.isArray(value) && value.length === 3 && value.every(Number.isFinite);
+}
+
 export async function showModel(container, bytes) {
     const manager = new THREE.LoadingManager();
     manager.setURLModifier(url => { if (!url.startsWith('blob:') && !url.startsWith('data:'))
@@ -13,11 +18,28 @@ export async function showModel(container, bytes) {
     const light = new THREE.DirectionalLight(0xffffff, 4);
     light.position.set(3, 5, 4);
     scene.add(light);
-    const model = gltf.scene, box = new THREE.Box3().setFromObject(model), center = box.getCenter(new THREE.Vector3()), size = box.getSize(new THREE.Vector3()).length() || 1;
+    const model = gltf.scene;
+    const box = new THREE.Box3().setFromObject(model);
+    const center = box.getCenter(new THREE.Vector3());
+    const size = box.getSize(new THREE.Vector3()).length() || 1;
+    const cameraTarget = new THREE.Vector3();
+    const cameraPosition = new THREE.Vector3(size * 1.4, size * 0.8, size * 1.8);
+    let minDistance = size * 0.5;
+    const initialView = model.userData.initialView;
+    if (isPoint(initialView?.position) && isPoint(initialView?.target)) {
+        const position = new THREE.Vector3(...initialView.position);
+        const target = new THREE.Vector3(...initialView.target);
+        const distance = position.distanceTo(target);
+        if (box.containsPoint(target) && distance > 0 && distance <= size * 8) {
+            cameraPosition.copy(position).sub(center);
+            cameraTarget.copy(target).sub(center);
+            minDistance = Math.min(minDistance, distance * 0.15);
+        }
+    }
     model.position.sub(center);
     scene.add(model);
-    const camera = new THREE.PerspectiveCamera(42, 1, 0.01, size * 100);
-    camera.position.set(size * 1.4, size * 0.8, size * 1.8);
+    const camera = new THREE.PerspectiveCamera(42, 1, minDistance * 0.2, size * 100);
+    camera.position.copy(cameraPosition);
     let renderer;
     try {
         renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -31,8 +53,10 @@ export async function showModel(container, bytes) {
     renderer.domElement.setAttribute('tabindex', '0');
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = false;
-    controls.minDistance = size * 0.5;
+    controls.target.copy(cameraTarget);
+    controls.minDistance = minDistance;
     controls.maxDistance = size * 8;
+    controls.update();
     const render = () => renderer.render(scene, camera);
     const resize = () => { const w = container.clientWidth, h = container.clientHeight; if (!w || !h)
         return; camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.setSize(w, h); render(); };

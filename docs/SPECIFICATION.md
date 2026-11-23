@@ -712,6 +712,8 @@ Der Viewer zeigt Objektname, Datierung, Maßstab soweit bekannt, Quelle und Eino
 
 `model`-Metadaten umfassen `file`, `representation`, optional `dimensionsMeters`, `previewFile`, `alt` und `entityIds`. Materialien und Texturen gehören zum Lizenzinventar. Kamera, Licht und technische Startrotation des Viewers werden von der App gesteuert, können aber durch begrenzte geprüfte Metadaten ergänzt werden.
 
+Die aktive glTF-Szene kann unter `extras.initialView` die Arrays `position` und `target` mit je drei endlichen Koordinaten im glTF-Raum (Meter, Y nach oben) angeben. Das Ziel liegt innerhalb der Szenengrenzen. Die Kameraposition hat einen positiven Abstand zum Ziel bis zur achtfachen Länge der Diagonalen der Szenengrenzen. Der Viewer verwendet die Angaben für die Startansicht und den Drehpunkt. Bei fehlenden oder ungültigen Angaben zentriert er die gesamte Szene. Die nahe Clipping-Ebene skaliert mit dem erlaubten Mindestabstand, damit die Tiefenauflösung zur Modellgröße passt.
+
 ### 13.2 Modelle auf dem Globus
 
 Die Kartenintegration wird separat vom Objektbetrachter implementiert. MapLibre dokumentiert Custom-Layer-Unterstützung und eine Three.js-Integration; daraus folgt jedoch noch keine bestandene Integration unserer gewählten Versionen und Assets. Besonders Projektion, Übergänge, Horizont und Picking werden früh geprüft. [T5, T11]
