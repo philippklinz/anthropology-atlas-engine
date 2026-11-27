@@ -300,9 +300,13 @@ async function render(s, warnings) {
             return;
         const detailScroll = sameReading ? $('detail').scrollTop : 0;
         $('detail').innerHTML = content;
-        $('detail').scrollTop = detailScroll;
-        const station = s.view === 'chapter' && s.step && !sameReading && chapter.steps?.find(item => item.id === s.step);
+        const station = s.view === 'chapter' && s.step && chapter.steps?.find(item => item.id === s.step);
         const passage = station && document.getElementById('reading-' + station.textAnchor);
+        if (passage && station.assetId) {
+            const illustration = $('detail').querySelector(':scope > figure.content-image');
+            if (illustration) passage.after(illustration);
+        }
+        $('detail').scrollTop = detailScroll;
         if (router.preview && router.preview === displayedMap?.state) retimeLinks(router.preview.time.year);
         document.title = `${s.id ? label(s.id, s.language) : (s.view === 'search' && activeCategory(s.types)?.labels[s.language === 'de' ? 0 : 1]) || m[s.view === 'search' ? 'search' : s.view === 'licenses' ? 'licenses' : s.view === 'about' ? 'about' : 'atlas']} · ${m.atlas}`;
         network?.destroy();
@@ -406,7 +410,7 @@ async function render(s, warnings) {
         if (active()) {
             shell.inert = false;
             shell.setAttribute('aria-busy','false');
-            if (passage) {
+            if (passage && !sameReading) {
                 passage.focus({preventScroll:true});
                 passage.scrollIntoView({block:'start'});
             }
