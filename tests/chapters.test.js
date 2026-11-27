@@ -128,3 +128,28 @@ test('Reading links open a known chapter in its own time or in the current compa
     assert.equal(multi.id, b.id);
     assert.deepEqual(multi.time, comparison.time);
 });
+
+test('A reading link opens a named station with its date, camera, layers and translated passage', () => {
+    const state = defaultState(a, 'source', 'release', 'en');
+    const scene = { ...b.initialState, time: {kind:'instant', at:at(1612)}, layers:['attested-at'],
+        camera:{...b.initialState.camera, longitude:5, latitude:47} };
+    const destination = { ...b, steps:[{id:'assembly', textAnchor:'meeting', state:scene}] };
+    const chapters = [a, destination];
+    const prose = '## Meeting & witnesses {#meeting}\n\n[At the assembly](chapter:beta#assembly) · [Absent](chapter:beta#missing)';
+    const container = document.createElement('div');
+    for (const selected of [[a.id], [a.id, b.id]]) {
+        container.innerHTML = chapterProse(prose, {...state, chapters:selected}, chapters);
+        const links = container.querySelectorAll('a');
+        assert.equal(links.length, 1);
+        assert.ok(links[0].hasAttribute('data-reading-station'));
+        const result = decodeState(links[0].hash, state, chapters).state;
+        assert.equal(result.language, 'en');
+        assert.equal(result.chapter, b.id);
+        assert.equal(result.step, 'assembly');
+        assert.deepEqual(result.chapters, selected.length === 1 ? [b.id] : selected);
+        assert.deepEqual(result.time, normalizeTime(scene.time).possible);
+        assert.deepEqual(result.camera, scene.camera);
+        assert.deepEqual(result.layers, scene.layers);
+        assert.equal(container.querySelector('#reading-meeting').textContent, 'Meeting & witnesses');
+    }
+});

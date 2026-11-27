@@ -71,7 +71,7 @@ function showMapFeatures(s, chapter, features) {
 function retimeLinks(year) {
     const base = router.state.time;
     const term = 'year' in base ? 'at=' + base.year : 'range=' + encodeURIComponent(base.from + ',' + base.to);
-    for (const link of document.querySelectorAll('.atlas-shell a[href^="#/v1/"]:not([data-area])')) {
+    for (const link of document.querySelectorAll('.atlas-shell a[href^="#/v1/"]:not([data-area], [data-reading-station])')) {
         if (!timeLinks.has(link)) {
             const href = link.getAttribute('href');
             const matches = href.includes('&' + term + '&');
@@ -300,6 +300,12 @@ async function render(s, warnings) {
             return;
         const detailScroll = sameReading ? $('detail').scrollTop : 0;
         $('detail').innerHTML = content;
+        const station = s.view === 'chapter' && s.step && chapter.steps?.find(item => item.id === s.step);
+        const passage = station && document.getElementById('reading-' + station.textAnchor);
+        if (passage && station.assetId) {
+            const illustration = $('detail').querySelector(':scope > figure.content-image');
+            if (illustration) passage.after(illustration);
+        }
         $('detail').scrollTop = detailScroll;
         if (router.preview && router.preview === displayedMap?.state) retimeLinks(router.preview.time.year);
         document.title = `${s.id ? label(s.id, s.language) : (s.view === 'search' && activeCategory(s.types)?.labels[s.language === 'de' ? 0 : 1]) || m[s.view === 'search' ? 'search' : s.view === 'licenses' ? 'licenses' : s.view === 'about' ? 'about' : 'atlas']} · ${m.atlas}`;
@@ -399,9 +405,16 @@ async function render(s, warnings) {
             const inventory = rights.map(r=>`<li><strong>${esc(label(r.id,s.language))}</strong><br>${esc(r.attribution)} · ${rightsLabel(r)}${r.sourceUrl && /^https?:\/\//.test(r.sourceUrl) ? ` · <a href="${esc(r.sourceUrl)}" target="_blank" rel="noopener noreferrer">${m.viewSource}</a>` : ''}</li>`).join('');
             if (!active())
                 return;
-            $('page').innerHTML = `<div class="reading"><p class="eyebrow">${m.licenses}</p><h1>Open Source</h1>${prose(text)}<p><a href="licenses/project.txt" target="_blank">GNU GPL v2</a></p><h2>${s.language === 'de' ? 'Inhalte und Abbildungen' : 'Content and illustrations'}</h2><ul class="license-inventory">${inventory}</ul></div>`;
+            $('page').innerHTML = `<div class="reading"><p class="eyebrow">${m.licenses}</p><h1>Open Source</h1>${chapterProse(text,s,provider.index.chapters)}<p><a href="licenses/project.txt" target="_blank">GNU GPL v2</a></p><h2>${s.language === 'de' ? 'Inhalte und Abbildungen' : 'Content and illustrations'}</h2><ul class="license-inventory">${inventory}</ul></div>`;
         }
-        if (active()) { shell.inert = false; shell.setAttribute('aria-busy','false'); }
+        if (active()) {
+            shell.inert = false;
+            shell.setAttribute('aria-busy','false');
+            if (passage && !sameReading) {
+                passage.focus({preventScroll:true});
+                passage.scrollIntoView({block:'start'});
+            }
+        }
         if (active())
             $('announcer').textContent = warnings.length ? `${warnings.join(', ')} · ${m.reset}` : document.title;
     }

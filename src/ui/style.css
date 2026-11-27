@@ -43,6 +43,8 @@
   #timebar{position:relative}#time-controls{height:auto;min-height:76px;flex-wrap:wrap;gap:8px;padding:8px 12px}
 }
 
+.chapter-text h3[id^="reading-"]{scroll-margin-block-start:1rem}
+
 /* Uncertain occurrences are date envelopes, never continuous occupations. */
 .vis-item.uncertain-instant,.vis-item.open-start { background:repeating-linear-gradient(135deg,#e4efea,#e4efea 6px,#d4e5dd 6px,#d4e5dd 8px); border-style:dashed; }
 .vis-item.open-start { border-left:0; }
