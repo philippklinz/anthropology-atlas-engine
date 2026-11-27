@@ -5,7 +5,8 @@ import recordSchema from '../../schemas/0.1.0/record.schema.json' with { type: '
 import { legacyMembers } from '../query/chapters.js';
 import { contentURL } from '../domain/paths.js';
 import { bboxOverlap, rankSearch, temporalMatch, matchesTypes } from '../query/query.js';
-import { excludedVariants, mapLayer, mapPortrayal } from '../domain/cartography.js';
+import { excludedVariants, isAreaAssertion, mapLayer, mapPortrayal } from '../domain/cartography.js';
+import { calendarDate } from '../domain/time.js';
 const ajv = new Ajv2020({ strict: false });
 addFormats(ajv);
 const validConfig = ajv.compile(configSchema), validCatalog = ajv.compile(catalogSchema), validRecord = ajv.compile(recordSchema);
@@ -50,6 +51,9 @@ export class StaticProvider {
     edges = {};
     cache = new Map();
     records = new Map();
+    pendingChunks = new Map();
+    geometries = new Map();
+    areaSubjects = new Map();
     discovery = [];
     memberships = new Map();
     atlasReady;
@@ -87,6 +91,10 @@ export class StaticProvider {
             this.index = await this.json(e.recordIndex);
             if (!this.index.records || !Array.isArray(this.index.chapters)) throw new Error('INDEX_RECORDS: invalid record index');
             [this.times,this.spatial,this.edges] = await Promise.all([this.items(e.time),this.items(e.spatial),this.items(e.relations)]);
+            const extents = new Set(this.spatial.filter(entry => isAreaAssertion(this.index.records[entry.recordId], entry)).map(entry => entry.recordId));
+            // Stable across year, selected chapters, language and the order of rendering.
+            const subjects = Object.keys(this.edges).filter(id => this.edges[id].some(edge => edge.from === id && extents.has(edge.id)));
+            this.areaSubjects = new Map(subjects.sort().map((id, index) => [id, index]));
             for (const ch of this.index.chapters) {
                 const ids = ch.recordIds ? [ch.id,...ch.recordIds] : await legacyMembers(ch,id=>this.getRecord(id));
                 this.memberships.set(ch.id,new Set(ids));
@@ -119,17 +127,23 @@ export class StaticProvider {
     }
     async items(path) { return (await this.json(path)).items; }
     getReleaseInfo() { return this.catalog; }
+    async loadRecordChunk(path) {
+        const chunk = await this.json(path);
+        const entries = Object.entries(chunk.records ?? {});
+        for (const [key, value] of entries) {
+            if (!validRecord(value) || value.id !== key || this.index.records[key]?.path !== path)
+                throw new Error('RECORD_INVALID: ' + key);
+        }
+        for (const [key, value] of entries) this.records.set(key, value);
+    }
     async getRecord(id) {
         if (!this.records.has(id)) {
-            const location = this.index.records[id];
-            if (!location)
-                throw new Error('RECORD_MISSING: ' + id);
-            const chunk = await this.json(location.path);
-            for (const [key, value] of Object.entries(chunk.records ?? {})) {
-                if (!validRecord(value) || value.id !== key || this.index.records[key]?.path !== location.path)
-                    throw new Error('RECORD_INVALID: ' + key);
-                this.records.set(key, value);
+            const path = this.index.records[id]?.path;
+            if (!path) throw new Error('RECORD_MISSING: ' + id);
+            if (!this.pendingChunks.has(path)) {
+                this.pendingChunks.set(path, this.loadRecordChunk(path).finally(() => this.pendingChunks.delete(path)));
             }
+            await this.pendingChunks.get(path);
         }
         const r = this.records.get(id);
         if (!r)
@@ -170,20 +184,32 @@ export class StaticProvider {
         return this.page(edges, cursor);
     }
     async features(viewport, f) {
-        const features = [];
         const groups = await this.interpretationGroups(f.chapters);
         const excluded = excludedVariants(groups, f.interpretations);
-        for (const s of this.spatial) {
-            if (excluded.has(s.recordId) || !this.include(s.recordId, f) || !this.times[s.recordId]?.possible || viewport && !bboxOverlap(s.bbox, viewport))
-                continue;
-            const r = await this.getRecord(s.recordId);
-            const layer = mapLayer(r,s);
-            if (!f.layers.includes(layer))
-                continue;
-            const geometry = JSON.parse(new TextDecoder().decode(await this.bytes(s.path)));
+        const visible = this.spatial.filter(s => !excluded.has(s.recordId) && this.include(s.recordId, f) &&
+            this.times[s.recordId]?.possible && (!viewport || bboxOverlap(s.bbox, viewport)) &&
+            f.layers.includes(mapLayer(this.index.records[s.recordId], s)));
+        // A year can reveal several chapters at once. Load the visible records and
+        // shapes together, preserving the spatial index order independently of HTTP.
+        const features = await Promise.all(visible.map(async s => {
+            if (!this.geometries.has(s.path)) {
+                this.geometries.set(s.path, this.bytes(s.path).then(bytes => JSON.parse(new TextDecoder().decode(bytes)))
+                    .catch(error => { this.geometries.delete(s.path); throw error; }));
+            }
+            const [r, geometry] = await Promise.all([this.getRecord(s.recordId), this.geometries.get(s.path)]);
             const group=groups.find(g=>g.memberIds.includes(r.id));
-            features.push({ ...geometry, id: s.recordId, properties: { recordId: s.recordId, geometryId: s.geometryId, role: s.role, direction:s.direction ?? '', portrayal:mapPortrayal(r,s), variant:group?group.memberIds.indexOf(r.id)+1:0, layer, uncertain: !this.times[s.recordId].certain || 'epistemic' in r && r.epistemic.status !== 'attested' } });
-        }
-        return { type: 'FeatureCollection', features };
+            const portrayal = mapPortrayal(r, s);
+            const layer = mapLayer(r, s);
+            const properties = { recordId: s.recordId, geometryId: s.geometryId, role: s.role, direction:s.direction ?? '', portrayal, variant:group?group.memberIds.indexOf(r.id)+1:0, layer, uncertain: !this.times[s.recordId].certain || 'epistemic' in r && r.epistemic.status !== 'attested' };
+            if (portrayal === 'dated-area') {
+                const metadata = await this.getRecord(s.geometryId);
+                properties.areaSubject = r.subjectId;
+                properties.areaIndex = this.areaSubjects.get(r.subjectId);
+                properties.approximateExtent = s.role === 'uncertainty-area' || metadata.accuracy.kind === 'unknown' || ['schematic', 'reconstructed'].includes(metadata.method);
+            }
+            return { ...geometry, id: s.recordId, properties };
+        }));
+        const year = calendarDate(f.range.from).year;
+        return { type: 'FeatureCollection', features, year: year === calendarDate(f.range.to - 1).year ? year : null };
     }
 }

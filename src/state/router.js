@@ -49,15 +49,27 @@ export class Router {
     }
     commit(state) {
         const normalized = normalizeState(state), hash = encodeState(normalized);
+        // Drilling into a record during playback leaves the visible year as a
+        // single Back destination, just as pausing and then opening it would.
+        const preview = this.preview && encodeState(this.preview);
+        if (preview && preview !== hash && preview !== location.hash)
+            history.pushState(null, '', preview);
         this.preview = undefined;
-        if (location.hash === hash)
+        if (location.hash === hash) {
+            if (preview) this.onChange(this.state, []);
             return;
+        }
         history.pushState(null, '', hash);
         this.lastURL = location.href;
         this.state = normalized;
         this.onChange(normalized, []);
     }
     destroy() { this.abort.abort(); }
+    discardPreview() {
+        if (!this.preview) return;
+        this.preview = undefined;
+        this.onChange(this.state, []);
+    }
     commitPreview() { if (this.preview)
         this.commit(this.preview); }
 }

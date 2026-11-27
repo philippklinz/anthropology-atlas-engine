@@ -1,12 +1,17 @@
 // Historical meaning is classified before either renderer receives the geometry.
 export const landscapeRoles = ['land-reconstruction', 'ice-reconstruction'];
+export function isAreaAssertion(record, spatial) {
+    return record?.kind === 'assertion' && (spatial.role === 'extent' || spatial.role === 'uncertainty-area');
+}
 export function mapLayer(record, spatial) {
     if (landscapeRoles.includes(spatial.role)) return 'landscapes';
-    if (record.kind === 'event' && record.eventType === 'migration') return 'migrations';
-    return record.kind === 'assertion' ? record.predicate : 'events';
+    // The published record index exposes eventType/predicate as a single type.
+    if (record.kind === 'event' && (record.eventType ?? record.type) === 'migration') return 'migrations';
+    return record.kind === 'assertion' ? (record.predicate ?? record.type) : 'events';
 }
 export function mapPortrayal(record, spatial) {
     if (landscapeRoles.includes(spatial.role)) return spatial.role;
+    if (isAreaAssertion(record, spatial)) return 'dated-area';
     if (record.eventType === 'migration' && spatial.role === 'route') return 'migration';
     if (spatial.role === 'uncertainty-area') return 'uncertainty-area';
     return 'ordinary';

@@ -1,8 +1,18 @@
 export function routeStyle(variant = 0) {
     return variant === 2 ? {color:'#6d5185', dash:[2,5]} : {color:'#985322', dash:[8,4]};
 }
+const areaPalette = ['#18796e', '#9b5433', '#67558c', '#386d98', '#806922', '#984e67', '#487142', '#855340'];
+export function areaColor(index = 0) {
+    return areaPalette[index] ?? `hsl(${Math.round(index * 137.508) % 360}, 48%, 34%)`;
+}
 export function featureStyle(f) {
     const p=f.properties ?? {}, area=f.geometry.type.includes('Polygon'), point=f.geometry.type.includes('Point');
+    if (p.portrayal === 'dated-area') {
+        const color = areaColor(p.areaIndex);
+        const locality = p.role === 'uncertainty-area';
+        return {fill:color, fillOpacity:locality ? 0.14 : 0.24, stroke:color, width:2,
+            dash:locality ? [1,3] : p.approximateExtent ? [4,3] : undefined, hatched:p.approximateExtent};
+    }
     if(p.portrayal === 'land-reconstruction') return {fill:'#d8cba9cc',stroke:'#87764e',width:1.3,dash:[5,3]};
     if(p.portrayal === 'ice-reconstruction') return {fill:'#e8f2fadd',stroke:'#6a8fa7',width:1.3,dash:[3,3]};
     if(p.portrayal === 'uncertainty-area') return {fill:'#aa785522',stroke:'#985322',width:1.5,dash:[3,4]};

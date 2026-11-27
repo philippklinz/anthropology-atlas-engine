@@ -1,8 +1,11 @@
+import { chapterProse, escapeHTML as esc } from './ui/chapter-prose.js';
 import { ChapterSearch, chronological, openChapters } from './query/chapters.js';
 import { renderExplorer } from './ui/explorer.js';
 import { imageURL } from './ui/images.js';
 import { chapterModelLinks } from './ui/model-links.js';
 import { AtlasLayout } from './ui/layout.js';
+import { TimeControls } from './ui/time-controls.js';
+import { playbackWindow } from './state/playback.js';
 import { renderMapContext, interpretationPanel, layerLabels } from './ui/cartography.js';
 import { StaticProvider } from './catalog/provider.js';
 import { categoryCounts, activeCategory, directoryState } from './ui/directory.js';
@@ -10,19 +13,21 @@ import { emptyContext } from './state/empty.js';
 import { Router } from './state/router.js';
 import { defaultState, encodeState, target, filters, searchFilters } from './state/state.js';
 import { localized } from './query/query.js';
-import { formatTime, formatDisplayYear, formatRange, calendarDate, isDeepYear, MIN_YEAR, MAX_YEAR, BP_REFERENCE_YEAR, MAX_BP, yearFromBP } from './domain/time.js';
+import { formatTime, MIN_YEAR, MAX_YEAR } from './domain/time.js';
 import { messages, typeLabels, eventRoleLabels } from './i18n/messages.js';
 import { AtlasMap } from './map/map.js';
 import { SvgGlobe } from './map/svg-globe.js';
 import { AtlasTimeline } from './timeline/timeline.js';
 import vocabulary from '../schemas/0.1.0/vocabulary.json' with {type:'json'};
 const $ = (id) => document.getElementById(id);
-const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const icon = (name) => { const paths = { globe: '<circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18M5 6h14M5 18h14"/>', network: '<circle cx="5" cy="6" r="3"/><circle cx="18" cy="5" r="3"/><circle cx="13" cy="19" r="3"/><path d="m8 6 7-1M7 8l5 8m5-8-3 8"/>', search: '<circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/>', book: '<path d="M3 4h6l3 2 3-2h6v15h-6l-3 2-3-2H3zM12 6v15"/>', cube: '<path d="m12 2 9 5v10l-9 5-9-5V7zM3 7l9 5 9-5M12 12v10"/>' }; return `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5">${paths[name] ?? paths.book}</svg>`; };
 document.querySelector('a.skip')?.addEventListener('click', e => { e.preventDefault(); ($('explorer').hidden ? $('main') : $('explore-main')).focus(); });
 const root = $('app');
 root.innerHTML = `<section id="explorer" hidden aria-label="Kapitel / Chapters"></section><div class="atlas-shell"><button id="menu-backdrop" tabindex="-1" hidden></button><aside id="sidebar" aria-label="Navigation" aria-hidden="true" inert></aside><header id="topbar"></header><main id="main" tabindex="-1"><div class="stage"><div id="map"></div><div id="network" hidden></div><div id="model" hidden></div><div id="page" hidden></div><div id="map-tools"></div><div id="map-notice" hidden></div><div id="map-caption"></div><div id="map-context" hidden></div></div><aside id="detail" aria-label="Details"></aside></main><footer id="timebar"></footer><div id="announcer" role="status" aria-live="polite" class="sr-only"></div></div>`;
-let provider, discovery, router, map, timeline, network, disposeModel, generation = 0, hasDemo = false;
+let provider, discovery, router, map, timeline, timeControls, network, disposeModel, generation = 0, hasDemo = false;
+let displayedChapter, displayedState, displayedMap, frameRequest = 0, timeLinks;
+const visibleState = () => router.preview ?? router.state;
+const hasMap = view => !['network', 'model', 'image', 'search', 'about', 'licenses'].includes(view);
 const layout = new AtlasLayout(document.querySelector('.atlas-shell'), () => { if (!$('map').hidden) map?.resize(); timeline?.resize(); });
 const isEmpty = () => provider.catalog.entrypoints.defaultChapterId === null;
 const isDemo = () => provider.catalog.dataReleaseId.startsWith('fixture-');
@@ -42,8 +47,62 @@ function link(s, id, text, view) { return `<a href="${esc(href(s, id, view))}">$
 function chapterBadges(s,id) { return `<span class="chapter-badges">${chronological(provider.chaptersFor(id,s.chapters)).map(ch=>`<a class="chapter-badge" href="${esc(encodeState(chapterState(ch,s)))}">${esc(localized(ch.labels,s.language).split(' · ')[0])}</a>`).join('')}</span>`; }
 function recordList(s, ids) { return `<ul class="record-list">${ids.map(id => `<li>${link(s, id)}<span>${esc(typeLabels[provider.index.records[id]?.type ?? '']?.[s.language === 'de' ? 0 : 1] ?? typeLabels[provider.index.records[id]?.kind ?? '']?.[s.language === 'de' ? 0 : 1] ?? '')}</span>${chapterBadges(s,id)}</li>`).join('')}</ul>`; }
 function setError(error) { document.querySelector('.atlas-shell').inert = false; $('explorer').hidden = true; document.querySelector('.atlas-shell').hidden = false; const msg = error instanceof Error ? error.message : String(error); $('page').hidden = false; $('page').innerHTML = `<div class="reading"><p class="eyebrow">Atlas</p><h1>Diese Ansicht ist nicht verfügbar / View unavailable</h1><p>${esc(msg)}</p><a href="#/v1/map">Zum Atlas / Return to atlas</a><button id="retry">Neu laden / Reload</button></div>`; $('retry').onclick = () => location.reload(); $('announcer').textContent = msg; }
-function formYear(s, year) { if (Number.isInteger(year) && year >= MIN_YEAR && year <= MAX_YEAR)
-    router.commit({ ...s, time: { year }, step:undefined }); }
+function validYear(year) { return Number.isInteger(year) && year >= MIN_YEAR && year <= MAX_YEAR; }
+function applyYear(year) {
+    if (validYear(year)) router.commit({ ...visibleState(), time: { year }, step: undefined });
+}
+function selectMapRecords(hits) {
+    // A slow payload or a GeoJSON worker can leave the previous shape under the pointer.
+    if (!displayedMap) return;
+    const s = displayedMap.state;
+    const ids = hits.filter(id => displayedMap.ids.has(id));
+    if (ids.length === 1) router.commit(target(s, viewFor(ids[0]), ids[0]));
+    else if (ids.length) router.commit({ ...target(s, 'map'), selection: ids, detail: 'overlap' });
+}
+function showMapFeatures(s, chapter, features) {
+    displayedMap = {state: s, ids: new Set(features.features.map(feature => feature.properties.recordId))};
+    map?.setFeatures(features, s.id);
+    renderMapContext($('map-context'), s, chapter, features, provider, next => router.commit(next));
+    if (!hasMap(s.view)) $('map-context').hidden = true;
+    $('map-notice').hidden = !hasMap(s.view) || features.features.length > 0 || isEmpty();
+}
+// Links that inherit the current cursor also work with Open in new tab / Copy
+// link during a preview. Chapter stations with their own dates retain them.
+function retimeLinks(year) {
+    const base = router.state.time;
+    const term = 'year' in base ? 'at=' + base.year : 'range=' + encodeURIComponent(base.from + ',' + base.to);
+    for (const link of document.querySelectorAll('.atlas-shell a[href^="#/v1/"]:not([data-area])')) {
+        if (!timeLinks.has(link)) {
+            const href = link.getAttribute('href');
+            const matches = href.includes('&' + term + '&');
+            timeLinks.set(link, matches ? href.replace(/&step=[^&]*/, '').replace('&' + term + '&', '&at=YEAR&') : '');
+        }
+        const template = timeLinks.get(link);
+        if (template) link.setAttribute('href', template.replace('&at=YEAR&', '&at=' + year + '&'));
+    }
+}
+function showCursor(year, movingTimeline = false) {
+    timeControls.showYear(year);
+    if (!movingTimeline) timeline.previewYear(year);
+    retimeLinks(year);
+}
+async function previewYear(year, source = 'scrubber') {
+    if (!validYear(year) || displayedChapter?.id !== router.state.chapter) return;
+    const request = ++frameRequest;
+    const s = { ...router.state, time: {year}, step: undefined };
+    // The scrubber's release commits its requested year even while a file loads.
+    // Pausing the clock instead commits the last frame the reader actually saw.
+    if (source !== 'playback') router.preview = s;
+    try {
+        const features = await provider.features(s.spatialFilter, filters(s));
+        if (request !== frameRequest) return;
+        router.preview = s;
+        showCursor(year, source === 'timeline');
+        showMapFeatures(s, displayedChapter, features);
+    } catch (error) {
+        if (request === frameRequest) throw error;
+    }
+}
 function chapterState(ch, s) { return { ...s, view:'chapter', id:ch.id, chapter:ch.id, step:undefined, types:[], searchScope:'selection' }; }
 function renderControls(s, ch) {
     const m = messages[s.language], url = (view, id) => esc(encodeState(target(s, view, id)));
@@ -57,11 +116,11 @@ function renderControls(s, ch) {
     const focus = s.id && ['entity', 'event', 'network'].includes(s.view) ? s.id : ch.focusIds.find(id => provider.index.records[id]?.kind === 'entity');
     $('map-tools').innerHTML = `<div class="view-tabs"><a class="${!['network','model','image'].includes(s.view) ? 'active' : ''}" href="${url('map')}">${icon('globe')}${m.map}</a><a class="${s.view === 'network' ? 'active' : ''}" href="${url('network', focus)}">${icon('network')}${m.network}</a></div><div class="view-actions"><button id="world">${m.world}</button><button id="reset">${s.language === 'de' ? 'Auswahlansicht' : 'Selection view'}</button><button id="copy" aria-label="${m.copy}">${icon('book')} <span>${m.copy}</span></button></div>`;
     $('map-caption').innerHTML = `<span>${m.basemap}</span><span>${m.globeHint}</span>`;
-    $('layers-form').onchange = () => router.commit({ ...s, layers: [...$('layers-form').querySelectorAll('input:checked')].map(e => e.value) });
-    $('search-form').onsubmit = e => { e.preventDefault(); router.commit({ ...directoryState(s), query: $('search-input').value }); };
-    $('world').onclick = () => router.commit({ ...s, view: 'map', id: undefined, camera: { longitude: 4, latitude: 35, metersPerPixel: 50000, bearing: 0, pitch: 0 } });
+    $('layers-form').onchange = () => router.commit({ ...visibleState(), layers: [...$('layers-form').querySelectorAll('input:checked')].map(e => e.value) });
+    $('search-form').onsubmit = e => { e.preventDefault(); router.commit({ ...directoryState(visibleState()), query: $('search-input').value }); };
+    $('world').onclick = () => router.commit({ ...visibleState(), view: 'map', id: undefined, camera: { longitude: 4, latitude: 35, metersPerPixel: 50000, bearing: 0, pitch: 0 } });
     $('reset').onclick = () => router.commit(openChapters(s,provider.index.chapters));
-    $('copy').onclick = async () => { router.commitPreview(); try {
+    $('copy').onclick = async () => { timeControls.pause(); try {
         await navigator.clipboard.writeText(location.href);
         $('announcer').textContent = m.copied;
         $('copy').textContent = m.copied;
@@ -69,25 +128,24 @@ function renderControls(s, ch) {
     catch {
         $('announcer').textContent = s.language === 'de' ? 'Bitte die URL aus der Adresszeile kopieren.' : 'Copy the URL from the address bar.';
     } };
-    const year = 'year' in s.time ? s.time.year : calendarDate(s.time.from).year;
     if (!timeline) {
         $('timebar').innerHTML = '<div id="timeline-resizer" role="separator" aria-orientation="horizontal" aria-controls="timeline" tabindex="0"><span></span></div><div id="time-controls"></div><div id="timeline"></div>';
-        timeline = new AtlasTimeline($('timeline'), provider, s, id => router.commit(target(router.state, viewFor(id), id)), year => formYear(router.state, year));
+        timeline = new AtlasTimeline($('timeline'), provider, s,
+            id => router.commit(target(visibleState(), viewFor(id), id)), applyYear,
+            year => { timeControls.cancel(); void previewYear(year, 'timeline').catch(setError); });
+        timeControls = new TimeControls($('time-controls'), {
+            preview: previewYear, apply: applyYear, error: setError,
+            finish: () => { frameRequest++; router.commitPreview(); },
+            discard: () => { frameRequest++; router.discardPreview(); },
+            reset: () => router.commit({...visibleState(), step: undefined, time: openChapters(visibleState(), provider.index.chapters).time})
+        });
     }
-    const deep = isDeepYear(year), step = deep ? 1000 : 1;
-    const ageHint = s.language === 'de' ? 'BP = Jahre vor 1950 · Schraffur: Datierungsbereich, keine Dauer · ‹: ältere Grenze offen' : 'BP = years before 1950 · Hatching: dating range, not duration · ‹: older limit unknown';
-    $('time-controls').innerHTML = `<div><span class="eyebrow">${m.time}</span><strong class="current-year">${esc('year' in s.time ? formatDisplayYear(year,s.language) : formatRange(s.time,s.language))}</strong></div><button class="selection-time-reset" id="selection-time">${s.language==='de'?'Gesamter Zeitraum':'Full date range'}</button><form id="year-form"><button type="button" id="previous" aria-label="${deep ? (s.language==='de'?'1.000 Jahre früher':'1,000 years earlier') : m.previous}">−</button><label class="sr-only" for="year">${m.year}</label><input id="year" type="number" min="1" max="${MAX_BP}" value="${deep ? BP_REFERENCE_YEAR-year : year <= 0 ? 1-year : year}" required><label class="sr-only" for="era">Era</label><select id="era"><option value="bp" ${deep?'selected':''}>${s.language==='de'?'Jahre BP':'years BP'}</option><option value="ce" ${!deep && year>0?'selected':''}>${m.ce}</option><option value="bce" ${!deep && year<=0?'selected':''}>${m.bce}</option></select><button type="submit">${m.apply}</button><button type="button" id="next" aria-label="${deep ? (s.language==='de'?'1.000 Jahre später':'1,000 years later') : m.next}">+</button></form><p class="time-hint">${deep ? ageHint : m.gap}</p>`;
-    $('selection-time').onclick = () => router.commit({...s,step:undefined,time:openChapters(s,provider.index.chapters).time});
-    const eraBounds = () => { const era=$('era').value; $('year').min=era==='bp'?'0':'1'; $('year').max=String(era==='bp'?MAX_BP:era==='bce'?1-MIN_YEAR:MAX_YEAR); };
-    $('era').onchange = eraBounds; eraBounds();
-    $('year-form').onsubmit = e => { e.preventDefault(); const y = Number($('year').value); formYear(s, $('era').value === 'bp' ? yearFromBP(y) : $('era').value === 'bce' ? 1-y : y); };
-    $('previous').onclick = () => formYear(s, year-step);
-    $('next').onclick = () => formYear(s, year+step);
+    const range = playbackWindow(provider.index.chapters, provider.times, s, (id, chapters) => provider.belongs(id, chapters));
+    timeControls.update(s, range, hasMap(s.view));
     $('menu-backdrop').setAttribute('aria-label', m.closeNavigation);
     layout.sync(m);
     timeline.update(s);
 }
-function prose(text) { return text.split(/\n\s*\n/).map(p => p.startsWith('# ') ? `<h2>${esc(p.slice(2))}</h2>` : p.startsWith('## ') ? `<h3>${esc(p.slice(3))}</h3>` : `<p>${esc(p).replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>')}</p>`).join(''); }
 
 function citations(s, r) {
     const m = messages[s.language];
@@ -127,6 +185,10 @@ async function detail(s, ch, ids, groups=[]) {
     const m = messages[s.language], r = s.id ? await provider.getRecord(s.id) : ch;
     const common = isDemo() ? `<p class="badge">${m.demo}</p><p><a href="./">${s.language === 'de' ? 'Zu den historischen Inhalten' : 'Open historical content'}</a></p>` : r.editorial?.status === 'draft' ? `<p class="badge">${m.researchDraft}</p>` : '';
     if (!ch.id && !s.id) return emptyDetail(s);
+    if (s.view === 'map' && s.detail === 'overlap') {
+        const picked = s.selection.filter(id => ids.includes(id));
+        if (picked.length) return `<h1>${m.results}</h1>${recordList(s, picked)}`;
+    }
     const variants=interpretationPanel(s,groups,label,provider.times);
     if (r.kind === 'chapter') {
         const file = r.textFiles[s.language] ?? Object.values(r.textFiles)[0], text = new TextDecoder().decode(await provider.bytes(file));
@@ -136,7 +198,7 @@ async function detail(s, ch, ids, groups=[]) {
         const step=r.steps?.find(step=>step.id===s.step);
         const heroId = step ? step.assetId : r.focusIds.find(id=>provider.index.records[id]?.assetType === 'image');
         const hero = heroId ? await figure(s,await provider.getRecord(heroId)) : ''; 
-        return `${common}<h1>${esc(localized(r.labels, s.language))}</h1>${step?.summary?`<p class="note">${esc(localized(step.summary,s.language))}</p>`:''}${variants}<div class="chapter-text intro">${prose(intro)}</div>${chapterModelLinks(s,r,provider.index)}${hero}<h2>${m.explore}</h2>${recordList(s, r.focusIds)}<div class="chapter-text">${prose(sections.join('\n\n'))}</div><details class="metadata"><summary>${m.results} · ${ids.length}</summary>${recordList(s, ids)}</details>${citations(s, r)}${isDemo() ? `<div class="note">${m.demoText}</div>` : ''}`;
+        return `${common}<h1>${esc(localized(r.labels, s.language))}</h1>${step?.summary?`<p class="note">${esc(localized(step.summary,s.language))}</p>`:''}${variants}<div class="chapter-text intro">${chapterProse(intro,s,provider.index.chapters)}</div>${chapterModelLinks(s,r,provider.index)}${hero}<div class="chapter-text">${chapterProse(sections.join('\n\n'),s,provider.index.chapters)}</div><h2>${m.explore}</h2>${recordList(s, r.focusIds)}<details class="metadata"><summary>${m.results} · ${ids.length}</summary>${recordList(s, ids)}</details>${citations(s, r)}${isDemo() ? `<div class="note">${m.demoText}</div>` : ''}`;
     }
     let body = '';
     if ('time' in r)
@@ -145,8 +207,13 @@ async function detail(s, ch, ids, groups=[]) {
         body += `<p class="lede">${esc(localized(r.summary, s.language))}</p>`;
     if (r.kind === 'assertion') {
         body += `<div class="relationship">${link(s, r.subjectId)}<span>${esc(localized(pred[r.predicate]?.labels, s.language))}</span>${link(s, r.objectId)}</div><p class="note">${r.epistemic.status === 'attested' ? m.attested : m.uncertain}</p>`;
-        const explanation = r.note ?? r.epistemic.note;
-        if (explanation) body += `<p class="lede">${esc(localized(explanation, s.language))}</p>`;
+        const note = localized(r.note, s.language), evidence = localized(r.epistemic.note, s.language);
+        if (note) body += `<p class="lede">${esc(note)}</p>`;
+        if (evidence && evidence !== note) {
+            const mapped = r.spatial?.some(area => ['extent','uncertainty-area'].includes(area.role));
+            if (mapped) body += `<h2>${s.language === 'de' ? 'Zur Einzeichnung' : 'About the mapped area'}</h2>`;
+            body += `<p>${esc(evidence)}</p>`;
+        }
     }
     if (r.kind === 'event') {
         if (provider.belongs(r.id, [ch.id])) body += chapterModelLinks(s, ch, provider.index);
@@ -184,13 +251,17 @@ async function detail(s, ch, ids, groups=[]) {
 }
 async function render(s, warnings) {
     const current = ++generation, active = () => current === generation, m = messages[s.language];
+    timeControls?.cancel();
+    frameRequest++;
+    timeLinks = new WeakMap();
+    const sameReading = displayedState && s.view === displayedState.view && s.id === displayedState.id && s.chapter === displayedState.chapter && s.language === displayedState.language && s.detail === displayedState.detail;
     try {
         document.documentElement.lang = s.language;
         const exploring = s.view === 'explore';
         $('explorer').hidden = !exploring;
         const shell=document.querySelector('.atlas-shell');
         shell.hidden = exploring;
-        shell.inert = !exploring;
+        shell.inert = !exploring && !sameReading;
         shell.setAttribute('aria-busy',String(!exploring));
         if (exploring) {
             layout.setOpen(false,false);
@@ -218,6 +289,7 @@ async function render(s, warnings) {
         const groups=await provider.interpretationGroups(s.chapters);
         if(!active())return;
         renderControls(s, chapter);
+        if (router.preview && router.preview === displayedMap?.state) showCursor(router.preview.time.year);
         document.querySelector('.atlas-shell').classList.toggle('empty-catalog', isEmpty());
         const features = await provider.features(s.spatialFilter, filters(s));
         if (!active())
@@ -226,37 +298,39 @@ async function render(s, warnings) {
         const content = await detail(s, chapter, ids, groups);
         if (!active())
             return;
+        const detailScroll = sameReading ? $('detail').scrollTop : 0;
         $('detail').innerHTML = content;
-        $('detail').scrollTop = 0;
+        $('detail').scrollTop = detailScroll;
+        if (router.preview && router.preview === displayedMap?.state) retimeLinks(router.preview.time.year);
         document.title = `${s.id ? label(s.id, s.language) : (s.view === 'search' && activeCategory(s.types)?.labels[s.language === 'de' ? 0 : 1]) || m[s.view === 'search' ? 'search' : s.view === 'licenses' ? 'licenses' : s.view === 'about' ? 'about' : 'atlas']} · ${m.atlas}`;
         network?.destroy();
         network = undefined;
         disposeModel?.();
         disposeModel = undefined;
-        $('map').hidden = ['network','model','image'].includes(s.view) || ['search', 'about', 'licenses'].includes(s.view);
+        $('map').hidden = !hasMap(s.view);
         $('network').hidden = s.view !== 'network';
         $('model').hidden = !['model','image'].includes(s.view);
         $('page').hidden = !['search', 'about', 'licenses'].includes(s.view);
         $('map-caption').hidden = $('map').hidden;
-        renderMapContext($('map-context'),s,chapter,features,provider,next=>router.commit(next));
-        if($('map').hidden)$('map-context').hidden=true;
-        $('map-notice').hidden = $('map').hidden || ids.length > 0 || isEmpty();
         $('map-notice').innerHTML = `<strong>${m.empty}</strong><p>${m.emptyHint}</p>`;
         if (!map) {
+            const move = camera => router.commit({ ...visibleState(), camera });
             try {
-                map = new AtlasMap($('map'), s.camera, camera => router?.commit({ ...router.state, camera }), picked => { if (picked.length === 1)
-                    router.commit(target(router.state, viewFor(picked[0]), picked[0]));
-                else {
-                    $('detail').innerHTML = `<h1>${m.results}</h1>${recordList(router.state, picked)}`;
-                } }, message => { $('announcer').textContent = message; });
+                map = new AtlasMap($('map'), s.camera, move, selectMapRecords, message => { $('announcer').textContent = message; });
             }
             catch (error) {
                 console.warn('MapLibre unavailable; using SVG globe', String(error));
-                map = new SvgGlobe($('map'), s.camera, camera => router.commit({ ...router.state, camera }), ids => router.commit(target(router.state, viewFor(ids[0]), ids[0])));
+                map = new SvgGlobe($('map'), s.camera, move, selectMapRecords);
             }
         }
-        map?.setCamera(s.camera);
-        map?.setFeatures(features, s.id);
+        if (!displayedState || Object.keys(s.camera).some(key => s.camera[key] !== displayedState.camera[key])) {
+            map.setCamera(s.camera);
+        }
+        displayedChapter = chapter;
+        displayedState = s;
+        // A reader can scrub or resume while a committed view is still loading.
+        // Only the newest preview may replace the shapes and links beneath it.
+        if (!router.preview) showMapFeatures(s, chapter, features);
         if (!$('map').hidden)
             map?.resize();
         if (s.view === 'network') {
@@ -340,6 +414,8 @@ function emptyDetail(s) {
     const de=s.language==='de';
     return `<h1>${de?'Der Atlas beginnt hier':'The atlas starts here'}</h1><p class="lede">${de?'Die Inhaltsquelle ist verbunden. Sie enthält noch keine veröffentlichten Kapitel.':'The content source is connected. It has no published chapters yet.'}</p><p>${de?'Hier können nach und nach belegte Orte, Personen, Sprachen und ihre Verbindungen entstehen.':'Documented places, people, languages and their connections can grow here.'}</p>${hasDemo?`<p><a class="action-link" href="?demo=1">${de?'Technikdemo mit fiktiven Inhalten öffnen':'Open technical demo with fictional content'}</a></p>`:''}<p><a href="./authoring.html">${de?'Inhalte prüfen und veröffentlichen':'Validate and publish content'}</a></p><details class="metadata"><summary>${de?'Verbundene Inhaltsquelle':'Connected content source'}</summary><a href="${esc(provider.catalogURL.href)}">${esc(provider.catalogURL.href)}</a><p>${de?'Einstellbar in':'Configured in'} <code>atlas.config.json</code></p></details>`;
 }
+document.addEventListener('visibilitychange', () => { if (document.hidden && timeControls?.clock.playing) timeControls.pause(); });
+
 try {
     const config = await fetch(new URL('atlas.config.json', document.baseURI), { cache: 'no-cache' }).then(r => { if (!r.ok)
         throw new Error('CONFIG_HTTP: ' + r.status); return r.json(); });

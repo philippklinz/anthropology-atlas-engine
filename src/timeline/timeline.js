@@ -71,13 +71,14 @@ export class AtlasTimeline {
             return [{ id, ...(group ? {group} : {}), content: el.innerHTML, title:title.innerHTML, start: this.projection.toDate(span.from), ...(t.kind === 'interval' || uncertainty || t.openStart ? { end: this.projection.toDate(span.to), type: 'range' } : { type: 'point' }), className: [!t.certain ? 'uncertain' : '',uncertainty ? 'uncertain-instant' : '', t.openStart ? 'open-start' : ''].filter(Boolean).join(' ') }];
         });
     }
-    constructor(container, provider, state, onSelect, onYear) {
+    constructor(container, provider, state, onSelect, onYear, onPreviewYear) {
         const year = 'year' in state.time ? state.time.year : calendarDate(state.time.from).year;
         this.provider = provider;
         this.assertions = new Map(Object.values(provider.edges ?? {}).flat().filter(e=>!e.event).map(e=>[e.id,e]));
         this.projection = this.projectionFor(state);
         this.language = state.language;
-        this.scope = JSON.stringify([state.chapters ?? [state.chapter],state.time,state.interpretations]);
+        this.scope = JSON.stringify([state.chapters ?? [state.chapter],state.interpretations]);
+        this.state = state;
         const data = this.items(state), window = windowFor(state,this.projection);
         const options = { height: '100%', rtl: false, showCurrentTime: false, stack: true, zoomable: true, moveable: true, selectable: true, editable: false, verticalScroll: true, min: this.projection.min, max: this.projection.max, zoomMin:this.projection.zoomMin, moment: (d) => moment.utc(d), tooltip: { followMouse: false }, showTooltips: true };
         // Function labels receive Moment values; custom BCE/CE labels avoid a visible year zero.
@@ -90,13 +91,30 @@ export class AtlasTimeline {
         this.timeline.setCustomTimeTitle(formatDisplayYear(year, state.language), 'cursor');
         this.timeline.on('select', e => { if (e.items.length)
             onSelect(String(e.items[0])); });
-        this.timeline.on('timechanged', e => onYear(calendarDate(this.projection.fromDate(e.time)).year));
+        const cursorYear = date => Math.max(MIN_YEAR, Math.min(MAX_YEAR, calendarDate(this.projection.fromDate(date)).year));
+        if (onPreviewYear) this.timeline.on('timechange', event => {
+            const year = cursorYear(event.time);
+            this.timeline.setCustomTimeTitle(formatDisplayYear(year, this.language), 'cursor');
+            onPreviewYear(year);
+        });
+        this.timeline.on('timechanged', event => onYear(cursorYear(event.time)));
+    }
+    previewYear(year) {
+        if (isDeepYear(year) && !this.projection.deep) {
+            this.update({...this.state, time:{year}});
+            return;
+        }
+        const date = this.projection.toDate(yearRange(year).from);
+        this.timeline.setCustomTime(date, 'cursor');
+        this.timeline.setCustomTimeTitle(formatDisplayYear(year, this.language), 'cursor');
+        const window = this.timeline.getWindow();
+        if (date < window.start || date > window.end) this.timeline.moveTo(date, {animation: false});
     }
     update(s) {
-        const scope=JSON.stringify([s.chapters ?? [s.chapter],s.time,s.interpretations]);
+        const scope=JSON.stringify([s.chapters ?? [s.chapter],s.interpretations]);
         const next = this.projectionFor(s), changed = next.deep !== this.projection.deep;
         this.projection = next;
-        this.timeline.setOptions({min:next.min,max:next.max,zoomMin:next.zoomMin,format:axisFormat(s.language,next)});
+        if (changed || this.language !== s.language) this.timeline.setOptions({min:next.min,max:next.max,zoomMin:next.zoomMin,format:axisFormat(s.language,next)});
         if (changed || this.language !== s.language || this.scope !== scope) { this.timeline.setItems(this.items(s)); this.timeline.setGroups(this.groups(s)); }
         this.language = s.language;
         const y = 'year' in s.time ? s.time.year : calendarDate(s.time.from).year;
@@ -104,8 +122,14 @@ export class AtlasTimeline {
         this.timeline.setCustomTime(current,'cursor');
         this.timeline.setCustomTimeTitle(formatDisplayYear(y,s.language),'cursor');
         const win=this.timeline.getWindow();
-        if (changed || this.scope !== scope || current < win.start || current > win.end) this.timeline.setWindow(next.toDate(windowFor(s,next).from),next.toDate(windowFor(s,next).to),{animation:false});
+        const newRange = !('year' in s.time) && (s.time.from !== this.state.time.from || s.time.to !== this.state.time.to);
+        const newChapter = this.state.chapter !== s.chapter || (s.step && this.state.step !== s.step);
+        if (changed || this.scope !== scope || newChapter || newRange || current < win.start || current > win.end) {
+            const range = windowFor(s, next);
+            this.timeline.setWindow(next.toDate(range.from),next.toDate(range.to),{animation:false});
+        }
         this.scope=scope;
+        this.state=s;
         this.timeline.setSelection(s.id && this.provider.times[s.id]?.possible ? [s.id] : []);
     }
     resize() { this.timeline.redraw(); }
