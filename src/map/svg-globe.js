@@ -1,7 +1,9 @@
 import { geoOrthographic, geoPath } from '../../vendor/geo/geo.js';
 import { directedLines } from '../domain/cartography.js';
 import { featureStyle, paintOrder, routeStyle } from './portrayal.js';
+import { areaDissolve, dissolveDuration, mapFeatureKey } from './area-states.js';
 const SVG = 'http://www.w3.org/2000/svg';
+let nextPattern = 0;
 // d3's spherical polygon convention is clockwise; GeoJSON uses counterclockwise.
 function sphericalFeature(feature) {
     const f = structuredClone(feature), g = f.geometry;
@@ -20,6 +22,10 @@ export class SvgGlobe {
     current;
     land = [];
     features = [];
+    collection;
+    dissolveTimer;
+    dissolveStart;
+    hatchId = 'atlas-area-hatch-' + ++nextPattern;
     selected;
     observer;
     timer;
@@ -85,7 +91,25 @@ export class SvgGlobe {
     }
     camera() { return { ...this.current }; }
     setCamera(c) { clearTimeout(this.timer); this.current = c; this.draw(); }
-    setFeatures(f, selected) { this.features = f.features.map(sphericalFeature).sort((a,b)=>paintOrder(a)-paintOrder(b)); this.selected = selected; this.draw(); }
+    setFeatures(f, selected) {
+        const previous = this.collection, key = mapFeatureKey(f), previousSelection = this.selected;
+        this.collection = f;
+        this.selected = selected;
+        if (this.featureKey === key) {
+            if (selected !== previousSelection) this.draw();
+            return;
+        }
+        this.featureKey = key;
+        clearTimeout(this.dissolveTimer);
+        const transition = !matchMedia('(prefers-reduced-motion: reduce)').matches && areaDissolve(previous, f);
+        this.dissolveStart = performance.now();
+        this.features = (transition || f.features).map(sphericalFeature).sort((a,b) => paintOrder(a) - paintOrder(b));
+        this.draw();
+        if (transition) this.dissolveTimer = setTimeout(() => {
+            this.features = this.features.filter(feature => feature.properties.dissolve !== 'out');
+            this.draw();
+        }, dissolveDuration);
+    }
     resize() { this.draw(); }
     draw() {
         const w = this.container.clientWidth, h = this.container.clientHeight;
@@ -94,12 +118,15 @@ export class SvgGlobe {
         this.svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
         this.projection.translate([w / 2, h / 2]).scale(6371008.8 / this.current.metersPerPixel).rotate([-this.current.longitude, -this.current.latitude, -(this.current.bearing ?? 0)]).clipAngle(90);
         const path = geoPath(this.projection), fragment = document.createDocumentFragment();
-        const add = (d, fill, stroke, width = 1, recordId, dashed = false) => { if (!d)
+        const defs = document.createElementNS(SVG, 'defs');
+        defs.innerHTML = `<pattern id="${this.hatchId}" width="8" height="8" patternUnits="userSpaceOnUse"><path d="M-2 2L2 -2 M0 8L8 0 M6 10L10 6" fill="none" stroke="#314c45" stroke-opacity=".36" stroke-width="1"/></pattern>`;
+        fragment.append(defs);
+        const add = (d, fill, stroke, width = 1, recordId, dashed = false, parent = fragment) => { if (!d)
             return; const el = document.createElementNS(SVG, 'path'); el.setAttribute('d', d); el.setAttribute('fill', fill); el.setAttribute('stroke', stroke); el.setAttribute('stroke-width', String(width)); if (dashed)
             el.setAttribute('stroke-dasharray', Array.isArray(dashed)?dashed.join(' '):'5 4'); if (recordId) {
             el.dataset.recordId = recordId;
             el.style.cursor = 'pointer';
-        } fragment.append(el); };
+        } parent.append(el); return el; };
         add(path({ type: 'Sphere' }), '#cbded7', '#9fbdb0');
         for (const f of this.land)
             add(path(f), '#f5f3ea', '#a6bbb0', 0.7);
@@ -107,9 +134,22 @@ export class SvgGlobe {
             const area = ['Polygon', 'MultiPolygon'].includes(f.geometry.type), point = f.geometry.type.includes('Point'), id = String(f.properties?.recordId), selected = id === this.selected;
             path.pointRadius(selected ? 8 : 5);
             const style=featureStyle(f);
-            add(path(f),style.fill,selected?'#202325':style.stroke,selected?3:style.width,id,style.dash);
+            if (f.properties?.portrayal === 'dated-area') {
+                const group = document.createElementNS(SVG, 'g');
+                const d = path(f), fade = f.properties.dissolve, hitId = fade === 'out' ? undefined : id;
+                fragment.append(group);
+                if (fade === 'out') group.style.pointerEvents = 'none';
+                const shape = add(d, style.fill, style.stroke, style.width, hitId, style.dash, group);
+                shape?.setAttribute('fill-opacity', style.fillOpacity);
+                if (style.hatched) add(d, `url(#${this.hatchId})`, 'none', 0, hitId, false, group);
+                if (fade && performance.now() - this.dissolveStart < dissolveDuration)
+                    group.animate(fade === 'in' ? [{opacity:0}, {opacity:1}] : [{opacity:1}, {opacity:0}],
+                        {duration:dissolveDuration, delay:this.dissolveStart - performance.now(), fill:'both'});
+            } else {
+                add(path(f),style.fill,selected?'#202325':style.stroke,selected?3:style.width,id,style.dash);
+            }
         }
-        for (const f of this.features.filter(f=>String(f.properties?.recordId)===this.selected)) {
+        for (const f of this.features.filter(f=>f.properties?.dissolve !== 'out' && String(f.properties?.recordId)===this.selected)) {
             const point=f.geometry.type.includes('Point'), area=f.geometry.type.includes('Polygon');
             const id=String(f.properties.recordId);
             path.pointRadius(13);

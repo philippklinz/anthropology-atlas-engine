@@ -7,6 +7,7 @@ import {selectionLayers} from '../src/map/selection.js';
 import {yearRange,normalizeTime} from '../src/domain/time.js';
 import {emptyContext} from '../src/state/empty.js';
 import {chapterModelIds,chapterModelLinks} from '../src/ui/model-links.js';
+import {chapterProse} from '../src/ui/chapter-prose.js';
 import {buildContent} from '../tools/build.js';
 import {loadFixture} from '../tools/workspace.js';
 import {validate} from '../tools/validate.js';
@@ -101,4 +102,29 @@ test('Browser history restores repeated back, new navigation and forward without
   router.commit(directoryState(router.state,['person']));await travel('back');assert.equal(router.state.view,'chapter');
   await travel('forward');assert.equal(router.state.view,'search');assert.deepEqual(router.state.chapters,[a.id]);assert.equal(error,undefined);
  } finally {router.destroy();history.replaceState(null,'',original)}
+});
+
+
+test('Reading links open a known chapter in its own time or in the current comparison', () => {
+    const initial = defaultState(a, 'source', 'release');
+    const third = make('chapter:gamma', 1700, {de:'Drittes Kapitel'});
+    const chapters = [a, b, third];
+    const paragraph = 'A & B < 4. **Lesen** [Weiter & lesen](chapter:beta) und [Entwurf](chapter:missing).';
+    const container = document.createElement('div');
+    container.innerHTML = chapterProse(paragraph, initial, chapters);
+    const anchor = container.querySelector('a');
+    assert.equal(container.querySelectorAll('a').length, 1);
+    assert.equal(anchor.textContent, 'Weiter & lesen');
+    assert.equal(container.querySelector('strong').textContent, 'Lesen');
+    assert.ok(container.textContent.includes('A & B < 4.'));
+    const single = decodeState(anchor.hash, initial, chapters).state;
+    assert.equal(single.chapter, b.id);
+    assert.deepEqual(single.chapters, [b.id]);
+    assert.deepEqual(single.time, normalizeTime(b.initialState.time).possible);
+    const comparison = {...initial, chapters:[a.id, third.id], time:{year:1650}};
+    container.innerHTML = chapterProse(paragraph, comparison, chapters);
+    const multi = decodeState(container.querySelector('a').hash, initial, chapters).state;
+    assert.deepEqual(multi.chapters, [a.id, b.id, third.id]);
+    assert.equal(multi.id, b.id);
+    assert.deepEqual(multi.time, comparison.time);
 });

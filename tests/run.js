@@ -4,5 +4,7 @@ import './chapters.test.js';
 import './deep-time.test.js';
 import './genetics.test.js';
 import './migrations.test.js';
+import './areas.test.js';
+import './playback.test.js';
 import {run} from './harness.js';
 await run();

@@ -18,6 +18,7 @@
 - Chapter intervals initialize the full time range; original source-calendar dates are shown separately from calculation dates. Event stations and cited place references are navigable, including derived event/place edges in the network.
 - Historical draft status and chapter citations are visible; the real sample is supplied by the content repo, with no historical records hardcoded into the engine.
 - Overlay navigation drawer on desktop and narrow layouts, with backdrop/Escape dismissal, focus containment and native modified links.
+- Shared year playback and keyboard/touch scrubbing on the globe. Dated chapter snapshots follow the timeline, with one history entry when pausing or finishing a scrub. A restored year stays paused.
 - Resizable timeline panel with pointer capture, keyboard bounds/reset, optional saved height and redraw of the existing map/timeline; panel changes do not navigate. Chapter changes reset the timeline window.
 - Selected point events use a contrasting circle halo; line/area selection has dedicated layers, mirrored by the SVG fallback.
 - MapLibre module worker is included and explicitly configured, fixing the missing-worker packaging error.
@@ -54,3 +55,7 @@ Two typed predicates distinguish ancestry in a taxonomic lineage from kinship be
 ## Migration maps · dev.8
 
 Added explicit directional movement geometry, independent migration/landscape layers, dated land/ice snapshots, event alternatives with comparison links, and chapter exploration steps. Both globe renderers consume the same semantic features. Empty comparison choices persist through reload. No animation, coastline interpolation, dependency installation or historical content is introduced into the engine. Browser validation results are recorded in `tests/browser/RESULTS.md`; GPU and independent historical review remain outstanding.
+
+## Year playback and dated areas
+
+The year control plays all selected chapters together. Playback pauses at evidence changes and chapter stops, and the year is shareable by URL. MapLibre and the SVG globe use the same dated features. The legend distinguishes documented extents from approximate areas of attestation and links to each claim, its dating and sources. Chapter texts can link directly to related chapters.
