@@ -13,7 +13,17 @@ export function renderExplorer(container, s, search, commit) {
     const date = c => { const r=chapterRange(c); return r ? formatRange(r,s.language) : t('Datierung offen','Date unknown'); };
     const bp = browse.scale === 'bp';
     const inputYear = y => y === undefined ? '' : bp ? BP_REFERENCE_YEAR-y : y <= 0 ? y-1 : y;
-    const option = (key,label) => `<label>${label}<select name="${key}" id="browse-${key}"><option value="">${t('Alle','All')}</option>${search.facets[key+'s'].map(f=>`<option value="${esc(f.id)}" ${browse[key]===f.id?'selected':''}>${esc(localized(f.labels,s.language))} (${f.count})</option>`).join('')}</select></label>`;
+    const collator = new Intl.Collator(s.language, {numeric: true});
+    const option = (key, label) => {
+        const choices = search.facets[key+'s'].map(({id, labels, count}) => ({
+            id, name: localized(labels, s.language), count
+        }));
+        choices.sort((a, b) => collator.compare(a.name, b.name));
+        const items = choices.map(({id, name, count}) =>
+            `<option value="${esc(id)}"${browse[key] === id ? ' selected' : ''}>${esc(name)} (${count})</option>`
+        );
+        return `<label>${label}<select name="${key}" id="browse-${key}"><option value="">${t('Alle','All')}</option>${items.join('')}</select></label>`;
+    };
     const period = search.facets.periods.find(p=>p.id===browse.period);
     container.innerHTML = `<header class="explorer-header"><a class="explorer-brand" href="${esc(encodeState({...s,view:'explore',id:undefined}))}"><svg class="brand-orbit" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18M5 6h14M5 18h14"/></svg><span>ANTHROPOLOGY <b>ATLAS</b></span></a><span class="explorer-motto">${t('Raum. Zeit. Verbindungen.','Space. Time. Connections.')}</span><nav class="language" aria-label="Language"><a href="${esc(encodeState({...s,language:'de'}))}" ${de?'aria-current="true"':''}>DE</a><a href="${esc(encodeState({...s,language:'en'}))}" ${!de?'aria-current="true"':''}>EN</a></nav></header>
     <main class="explorer-main" id="explore-main" tabindex="-1"><div class="explorer-intro"><p class="eyebrow">${t('DEIN EINSTIEG IN DEN ATLAS','YOUR WAY INTO THE ATLAS')}</p><h1>${t('Geschichte erkunden','Explore history')}</h1><p>${t('Wähle ein oder mehrere Kapitel. Entdecke ihre Orte, Menschen und Verbindungen gemeinsam auf der Karte.','Choose one or more chapters. Explore their places, people and connections together on the map.')}</p></div>

@@ -2,6 +2,7 @@ import test,{assert} from './harness.js';
 import {ChapterSearch,openChapters,chronological,legacyMembers} from '../src/query/chapters.js';
 import {defaultState,normalizeState,encodeState,decodeState,filters,searchFilters,target} from '../src/state/state.js';
 import {directoryState,categoryCounts} from '../src/ui/directory.js';
+import {renderExplorer} from '../src/ui/explorer.js';
 import {StaticProvider} from '../src/catalog/provider.js';
 import {selectionLayers} from '../src/map/selection.js';
 import {yearRange,normalizeTime} from '../src/domain/time.js';
@@ -40,6 +41,28 @@ test('Chapter discovery finds names and accents, intersects facets and dates, an
  assert.equal(search.query({from:yearRange(1500).from}).items[0].chapter.id,b.id);
  assert.equal(search.query({to:yearRange(1399).to}).total,0);
  assert.equal(search.query({page:999},1).page,1);
+});
+test('Explorer filter options follow the displayed language and keep the selected ID', () => {
+ const facets = [
+  {id:'oil', labels:{de:'Öl', en:'Oil'}},
+  {id:'guilds', labels:{de:'Zünfte', en:'Guilds'}},
+  {id:'fields', labels:{de:'Äcker', en:'Fields'}}
+ ];
+ const chapter = {...a, discovery:{...a.discovery, periods:facets, regions:facets, topics:facets}};
+ const search = new ChapterSearch([chapter]);
+ const state = {...defaultState(chapter,'source','release'), browse:{period:'oil', region:'oil', topic:'oil'}};
+ const container = document.createElement('div');
+ for (const [language, expected] of [
+  ['de', ['Alle', 'Äcker (1)', 'Öl (1)', 'Zünfte (1)']],
+  ['en', ['All', 'Fields (1)', 'Guilds (1)', 'Oil (1)']]
+ ]) {
+  renderExplorer(container, {...state, language}, search, () => {});
+  for (const key of ['period', 'region', 'topic']) {
+   const select = container.querySelector('#browse-'+key);
+   assert.deepEqual(Array.from(select.options, option => option.textContent), expected);
+   assert.equal(select.value, 'oil');
+  }
+ }
 });
 test('Selection URLs roundtrip, legacy chapter links select one, focus never changes the selected set',()=>{
  const initial=defaultState(a,'source','release');
